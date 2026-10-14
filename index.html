@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>OEE Analytics — Akij Resource</title>
+<style>
+  :root{ --teal:#0f5c56; --teal2:#0b7a6f; --ink:#12211f; --muted:#5d6b69; --line:#e2e8e7; --bg:#eef2f1; --card:#fff; --green:#2e7d32; --amber:#f9a825; --red:#c62828; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",Arial,Helvetica,sans-serif;font-size:14px}
+  .wrap{max-width:1080px;margin:0 auto;padding:16px 18px 48px}
+  header.top{background:linear-gradient(90deg,#0f5c56,#0b7a6f);color:#fff;border-radius:12px;padding:22px 26px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+  header.top .brand{display:flex;gap:14px;align-items:center}
+  .logo{width:50px;height:50px;border:2px solid #bff3ea;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#bff3ea;font-size:22px}
+  header.top h1{margin:0;font-size:26px;letter-spacing:.5px;font-weight:800}
+  header.top .sub{font-size:12px;opacity:.92;margin-top:3px;letter-spacing:1px;text-transform:uppercase}
+  .pill{background:#0a3f3a;border-radius:10px;padding:9px 14px;text-align:right;font-size:11px;line-height:1.5}
+  .pill b{font-size:13px;display:block;color:#bff3ea}
+  .intro{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 18px;margin-top:14px;display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:var(--muted);letter-spacing:.3px}
+  .intro b{color:var(--teal)}
+  h2.sec{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--teal);margin:20px 0 10px;border-bottom:2px solid #cfe3df;padding-bottom:6px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+  a.card{display:block;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;transition:.15s;position:relative;border-left:5px solid var(--teal2)}
+  a.card:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(15,92,86,.14);border-left-color:var(--teal)}
+  .row1{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .sbu{font-size:11px;font-weight:800;letter-spacing:1px;color:var(--teal);background:#e7f4f2;border-radius:6px;padding:3px 9px}
+  .live{font-size:10.5px;font-weight:700;color:var(--green);display:flex;align-items:center;gap:5px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px #e7f4e8}
+  .card h3{margin:10px 0 4px;font-size:17px;letter-spacing:.2px}
+  .card p{margin:0;font-size:12.5px;color:var(--muted)}
+  .kpis{margin-top:12px;font-size:11px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap}
+  .kpis span{background:#f2f6f5;border:1px solid var(--line);border-radius:20px;padding:3px 9px}
+  .open{margin-top:13px;font-size:12.5px;font-weight:700;color:var(--teal);display:flex;align-items:center;gap:6px}
+  .arrow{transition:.15s}
+  a.card:hover .arrow{transform:translateX(4px)}
+  footer{margin-top:26px;font-size:10.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .plain{margin-top:10px;font-size:11.5px;color:var(--muted)}
+  .plain a{color:var(--teal)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <div class="logo">G</div>
+      <div>
+        <div class="sub">Akij Resource — Operational Excellence</div>
+        <h1>OEE Analytics</h1>
+        <div class="sub" style="text-transform:none;letter-spacing:.3px">Production performance &amp; OEE loss diagnostic — one platform</div>
+      </div>
+    </div>
+    <div class="pill">LIVE&nbsp;·&nbsp;AUTO-UPDATED<b>Last day &amp; MTD</b>Targets A90 · P86 · Q97 · OEE75</div>
+  </header>
+
+  <div class="intro">
+    <span><b>Mode</b> each dashboard pulls its Google Sheet live on open</span>
+    <span><b>Periods</b> Last completed day + Month-to-date</span>
+    <span><b>Contents</b> OEE (A·P·Q) · downtime &amp; action board · opportunity loss · trends</span>
+  </div>
+
+  <h2 class="sec">Dashboards</h2>
+  <div class="grid">
+
+    <a class="card" href="https://sanjeed-ferhan.github.io/accl-vrm-oee-dashboard/" target="_blank" rel="noopener">
+      <div class="row1"><span class="sbu">ACCL</span><span class="live"><i class="dot"></i>Live</span></div>
+      <h3>Cement Grinding — VRM</h3>
+      <p>VRM-1 &amp; VRM-2 · Shifts A–D</p>
+      <div class="kpis"><span>Availability</span><span>Performance</span><span>Quality</span><span>OEE</span><span>NPT</span></div>
+      <div class="open">Open dashboard <span class="arrow">→</span></div>
+    </a>
+
+    <a class="card" href="https://sanjeed-ferhan.github.io/ail-sms-oee-dashboard/" target="_blank" rel="noopener">
+      <div class="row1"><span class="sbu">AIL</span><span class="live"><i class="dot"></i>Live</span></div>
+      <h3>SMS — Steel Melting Shop</h3>
+      <p>CCM &amp; Furnace 1–3 · Shifts A–C</p>
+      <div class="kpis"><span>Availability</span><span>Performance</span><span>Quality</span><span>OEE</span><span>NPT</span></div>
+      <div class="open">Open dashboard <span class="arrow">→</span></div>
+    </a>
+
+    <a class="card" href="https://sanjeed-ferhan.github.io/ael-flour-oee-dashboard/" target="_blank" rel="noopener">
+      <div class="row1"><span class="sbu">AEL</span><span class="live"><i class="dot"></i>Live</span></div>
+      <h3>Flour Milling</h3>
+      <p>Milling — Maida / Atta / Suji · Shifts A–D</p>
+      <div class="kpis"><span>Crushing input</span><span>Performance</span><span>OEE</span><span>NPT</span></div>
+      <div class="open">Open dashboard <span class="arrow">→</span></div>
+    </a>
+
+    <a class="card" href="https://sanjeed-ferhan.github.io/apfil-loom-oee-dashboard/" target="_blank" rel="noopener">
+      <div class="row1"><span class="sbu">APFIL</span><span class="live"><i class="dot"></i>Live</span></div>
+      <h3>Loom — Unit-01 &amp; Unit-02</h3>
+      <p>Loom Unit-1 &amp; Unit-2 · Shifts A–C</p>
+      <div class="kpis"><span>Availability</span><span>Performance</span><span>OEE</span><span>NPT</span></div>
+      <div class="open">Open dashboard <span class="arrow">→</span></div>
+    </a>
+
+    <a class="card" href="https://sanjeed-ferhan.github.io/apfil-tapeline-oee-dashboard/" target="_blank" rel="noopener">
+      <div class="row1"><span class="sbu">APFIL</span><span class="live"><i class="dot"></i>Live</span></div>
+      <h3>Tape Line</h3>
+      <p>Unit-1 &amp; Unit-2 Tapeline · Shifts A–C</p>
+      <div class="kpis"><span>Availability</span><span>Performance</span><span>OEE</span><span>NPT</span></div>
+      <div class="open">Open dashboard <span class="arrow">→</span></div>
+    </a>
+
+  </div>
+
+  <h2 class="sec">Direct links</h2>
+  <div class="plain">
+    <div>ACCL VRM — <a href="https://sanjeed-ferhan.github.io/accl-vrm-oee-dashboard/" target="_blank" rel="noopener">https://sanjeed-ferhan.github.io/accl-vrm-oee-dashboard/</a></div>
+    <div>AIL SMS — <a href="https://sanjeed-ferhan.github.io/ail-sms-oee-dashboard/" target="_blank" rel="noopener">https://sanjeed-ferhan.github.io/ail-sms-oee-dashboard/</a></div>
+    <div>AEL Flour — <a href="https://sanjeed-ferhan.github.io/ael-flour-oee-dashboard/" target="_blank" rel="noopener">https://sanjeed-ferhan.github.io/ael-flour-oee-dashboard/</a></div>
+    <div>APFIL Loom — <a href="https://sanjeed-ferhan.github.io/apfil-loom-oee-dashboard/" target="_blank" rel="noopener">https://sanjeed-ferhan.github.io/apfil-loom-oee-dashboard/</a></div>
+    <div>APFIL Tapeline — <a href="https://sanjeed-ferhan.github.io/apfil-tapeline-oee-dashboard/" target="_blank" rel="noopener">https://sanjeed-ferhan.github.io/apfil-tapeline-oee-dashboard/</a></div>
+  </div>
+
+  <footer>
+    <span>OEE Analytics — Akij Resource · single platform for all SBU OEE dashboards</span>
+    <span>Each dashboard auto-updates from its Google Sheet on open · OEE = A × P × Q</span>
+  </footer>
+</div>
+</body>
+</html>
