@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>OEE Analytics — Problem Finder</title>
+<title>OEE Analytics â€” Problem Finder</title>
 <style>
   :root{ --teal:#0f5c56; --teal2:#0b7a6f; --ink:#12211f; --muted:#5d6b69; --line:#e2e8e7; --bg:#eef2f1; --card:#fff; --green:#2e7d32; --amber:#f9a825; --red:#c62828; }
   *{box-sizing:border-box}
@@ -52,44 +52,43 @@
     <div class="brand">
       <div class="logo">G</div>
       <div>
-        <div class="sub">Akij Resource — Operational Excellence</div>
-        <h1>OEE Analytics — Problem Finder</h1>
-        <div class="sub" style="text-transform:none;letter-spacing:.3px">Last day &amp; MTD · where to work · Unavailable Order / No Sales Order</div>
+        <div class="sub">Akij Resource â€” Operational Excellence</div>
+        <h1>OEE Analytics â€” Problem Finder</h1>
+        <div class="sub" style="text-transform:none;letter-spacing:.3px">Last day &amp; MTD Â· where to work Â· Unavailable Order / No Sales Order</div>
       </div>
     </div>
-    <a class="back" href="index.html">← Dashboards</a>
+    <a class="back" href="index.html">â† Dashboards</a>
   </header>
   <div class="bar">
     <button id="btnDay" class="active" onclick="setTab('day')">Last day</button>
     <button id="btnMtd" onclick="setTab('mtd')">Month to date</button>
-    <button onclick="downloadCSV()" style="border-color:var(--teal);color:var(--teal);font-weight:800">Download NPT CSV</button>
-    <span class="status" id="status">Loading 12 SBUs…</span>
+    <span class="status" id="status">Loading 12 SBUsâ€¦</span>
   </div>
 
   <div class="grid g4" style="margin-top:12px">
-    <div class="card kpi"><div class="lab">Reporting day</div><div class="val" id="sumDay" style="font-size:18px">—</div><div class="sub" id="sumDaySub">last completed day</div></div>
-    <div class="card kpi"><div class="lab">SBUs reporting</div><div class="val" id="sumCount">—</div><div class="sub">with data for the period</div></div>
-    <div class="card kpi"><div class="lab">Unavailable-Order loss</div><div class="val" id="sumOrder" style="color:var(--red)">—</div><div class="sub">min · all SBUs (period)</div></div>
-    <div class="card kpi"><div class="lab">Lowest OEE</div><div class="val" id="sumWorst" style="color:var(--red)">—</div><div class="sub" id="sumWorstSub">—</div></div>
+    <div class="card kpi"><div class="lab">Reporting day</div><div class="val" id="sumDay" style="font-size:18px">â€”</div><div class="sub" id="sumDaySub">last completed day</div></div>
+    <div class="card kpi"><div class="lab">SBUs reporting</div><div class="val" id="sumCount">â€”</div><div class="sub">with data for the period</div></div>
+    <div class="card kpi"><div class="lab">Unavailable-Order loss</div><div class="val" id="sumOrder" style="color:var(--red)">â€”</div><div class="sub">min Â· all SBUs (period)</div></div>
+    <div class="card kpi"><div class="lab">Lowest OEE</div><div class="val" id="sumWorst" style="color:var(--red)">â€”</div><div class="sub" id="sumWorstSub">â€”</div></div>
   </div>
 
-  <h2 class="sec">Problematic issues — where to work</h2>
+  <h2 class="sec">Problematic issues â€” where to work</h2>
   <div class="card">
     <table>
       <thead><tr><th>SBU / Section</th><th class="num">OEE</th><th>Top issue (min)</th><th class="num">Order loss (min)</th><th>Where to work</th><th></th></tr></thead>
-      <tbody id="tbl"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
+      <tbody id="tbl"><tr><td colspan="6" class="empty">Loadingâ€¦</td></tr></tbody>
     </table>
   </div>
 
-  <h2 class="sec">Focus — Unavailable Order / No Sales Order</h2>
+  <h2 class="sec">Focus â€” Unavailable Order / No Sales Order</h2>
   <div class="card">
-    <div id="orderList"><div class="empty">Loading…</div></div>
-    <div class="muted" style="font-size:11px;margin-top:8px">Order loss = Production-Report “Unavailable Order” NPT + breakdown reasons matching order/sales. Ranked highest first.</div>
+    <div id="orderList"><div class="empty">Loadingâ€¦</div></div>
+    <div class="muted" style="font-size:11px;margin-top:8px">Order loss = Production-Report â€œUnavailable Orderâ€ NPT + breakdown reasons matching order/sales. Ranked highest first.</div>
   </div>
 
   <footer>
-    <span>OEE Analytics — Akij Resource · cross-SBU problem finder</span>
-    <span>Data pulled live from each SBU Google Sheet on open · OEE = A × P × Q</span>
+    <span>OEE Analytics â€” Akij Resource Â· cross-SBU problem finder</span>
+    <span>Data pulled live from each SBU Google Sheet on open Â· OEE = A Ã— P Ã— Q</span>
   </footer>
 </div>
 
@@ -133,7 +132,7 @@ async function loadAll(){
   res.sort((a,b)=>CONFIGS.findIndex(x=>x.k===a.c.k)-CONFIGS.findIndex(x=>x.k===b.c.k));
   RESULTS=res;
   const ok=res.filter(r=>!r.err).length;
-  document.getElementById("status").textContent="Live · "+ok+"/"+CONFIGS.length+" SBUs loaded · "+new Date().toLocaleString();
+  document.getElementById("status").textContent="Live Â· "+ok+"/"+CONFIGS.length+" SBUs loaded Â· "+new Date().toLocaleString();
   const any=res.find(r=>!r.err);
   if(any){ document.getElementById("sumDay").textContent=any.day.scopeLabel; document.getElementById("sumDaySub").textContent="basis: last completed day"; }
   render();
@@ -141,7 +140,7 @@ async function loadAll(){
 function setTab(t){ TAB=t; document.getElementById("btnDay").classList.toggle("active",t==="day"); document.getElementById("btnMtd").classList.toggle("active",t==="mtd"); render(); }
 function render(){
   const tb=document.getElementById("tbl");
-  if(!RESULTS.length){ tb.innerHTML='<tr><td colspan="6" class="empty">Loading…</td></tr>'; return; }
+  if(!RESULTS.length){ tb.innerHTML='<tr><td colspan="6" class="empty">Loadingâ€¦</td></tr>'; return; }
   let rows="", reporting=0, orderSum=0, worst=null;
   RESULTS.forEach(r=>{
     if(r.err){ rows+=`<tr><td><span class="sbu">${r.c.sbu}</span> ${r.c.sub}</td><td colspan="5" class="muted">Load error: ${r.err}</td></tr>`; return; }
@@ -149,24 +148,24 @@ function render(){
     if(!p.empty) reporting++;
     orderSum+=p.orderMin||0;
     const top=(p.losses&&p.losses[0])?p.losses[0]:{n:"(none recorded)",v:0};
-    const team=(p.board&&p.board[0])?p.board[0].team:"—";
+    const team=(p.board&&p.board[0])?p.board[0].team:"â€”";
     if(!p.empty && (!worst || p.kpi.OEE<worst.oee)){ worst={oee:p.kpi.OEE,name:r.c.sbu+" "+r.c.sub}; }
-    const oeeTxt=p.empty?'<span class="muted">—</span>':`<span class="oee" style="color:${oeeColor(p.kpi.OEE)}">${p.kpi.OEE.toFixed(1)}%</span>`;
+    const oeeTxt=p.empty?'<span class="muted">â€”</span>':`<span class="oee" style="color:${oeeColor(p.kpi.OEE)}">${p.kpi.OEE.toFixed(1)}%</span>`;
     const orderTxt=p.orderMin>0?`<span style="color:var(--red);font-weight:700">${fmt(p.orderMin)}</span>`:'<span class="muted">0</span>';
     rows+=`<tr>
       <td><span class="sbu">${r.c.sbu}</span> ${r.c.sub}</td>
       <td class="num">${oeeTxt}</td>
-      <td>${top.v>0?top.n+' <span class="muted">('+fmt(top.v)+' min)</span>':'<span class="muted">—</span>'}</td>
+      <td>${top.v>0?top.n+' <span class="muted">('+fmt(top.v)+' min)</span>':'<span class="muted">â€”</span>'}</td>
       <td class="num">${orderTxt}</td>
       <td>${p.empty?'<span class="muted">No data</span>':'<span class="tag t-amber">'+team+'</span>'}</td>
-      <td><a class="dl" href="${r.c.url}" target="_blank" rel="noopener">Open →</a></td>
+      <td><a class="dl" href="${r.c.url}" target="_blank" rel="noopener">Open â†’</a></td>
     </tr>`;
   });
   tb.innerHTML=rows;
   document.getElementById("sumCount").textContent=reporting+" / "+RESULTS.filter(r=>!r.err).length;
   document.getElementById("sumOrder").textContent=fmt(orderSum);
   if(worst){ document.getElementById("sumWorst").textContent=worst.oee.toFixed(1)+"%"; document.getElementById("sumWorstSub").textContent=worst.name; }
-  else { document.getElementById("sumWorst").textContent="—"; document.getElementById("sumWorstSub").textContent="—"; }
+  else { document.getElementById("sumWorst").textContent="â€”"; document.getElementById("sumWorstSub").textContent="â€”"; }
 
   // order focus
   const ord=RESULTS.filter(r=>!r.err && r[TAB].orderMin>0).map(r=>({c:r.c,v:r[TAB].orderMin, top:r[TAB].orderTop||"Unavailable Order"})).sort((a,b)=>b.v-a.v);
@@ -182,7 +181,7 @@ function render(){
 }
 function csvEsc(v){ v=String(v==null?"":v); return /[",\n\r]/.test(v)? '"'+v.replace(/"/g,'""')+'"' : v; }
 function downloadCSV(){
-  if(!RESULTS.length){ alert("Data still loading — please wait a moment."); return; }
+  if(!RESULTS.length){ alert("Data still loading â€” please wait a moment."); return; }
   const rows=[["SBU","Section","Period","Reporting Date","NPT (min)","Top NPT Reason","Top Reason (min)","Top NPT Category","Top Category (min)","Unavailable Order (min)","OEE %"]];
   RESULTS.forEach(function(r){
     if(r.err) return;
@@ -207,3 +206,4 @@ loadAll();
 </script>
 </body>
 </html>
+

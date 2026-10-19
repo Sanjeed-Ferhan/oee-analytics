@@ -18,7 +18,7 @@
   header.top .sub{font-size:12px;opacity:.92;margin-top:3px;letter-spacing:1px;text-transform:uppercase}
   .pill{background:#0a3f3a;border-radius:10px;padding:9px 14px;text-align:right;font-size:11px;line-height:1.5}
   .pill b{font-size:13px;display:block;color:#bff3ea}
-  .navbtn{background:#0a3f3a;color:#bff3ea;text-decoration:none;border-radius:8px;padding:11px 18px;font-weight:800;font-size:13px;letter-spacing:.3px;white-space:nowrap}
+  .navbtn{background:#0a3f3a;color:#bff3ea;text-decoration:none;border:0;border-radius:8px;padding:11px 18px;font-weight:800;font-size:13px;letter-spacing:.3px;white-space:nowrap;cursor:pointer;font-family:inherit}
   .navbtn:hover{background:#08332f}
   .intro{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 18px;margin-top:14px;display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:var(--muted);letter-spacing:.3px}
   .intro b{color:var(--teal)}
@@ -54,6 +54,7 @@
         <div class="sub" style="text-transform:none;letter-spacing:.3px">Production performance &amp; OEE loss diagnostic — one platform</div>
       </div>
     </div>
+    <button class="navbtn" onclick="downloadNPTCSV(this)">Download NPT CSV</button>
     <a class="navbtn" href="analytics.html">Analytics →</a>
     <div class="pill">LIVE&nbsp;·&nbsp;AUTO-UPDATED<b>Last day &amp; MTD</b>Targets A90 · P86 · Q97 · OEE75</div>
   </header>
@@ -170,5 +171,70 @@
     <span>Each dashboard auto-updates from its Google Sheet on open · OEE = A × P × Q</span>
   </footer>
 </div>
+
+<script src="engine.js"></script>
+<script>
+const STD={date:1,shift:7,out:10,ideal:11,op:17,planned:18,npt:20,run:21,good:38,target:9,nptCatStart:22};
+const LOOM={date:1,shift:8,out:11,ideal:12,op:18,planned:19,npt:21,run:22,good:39,target:10,nptCatStart:23};
+const BD={date:1,cat:8,reason:10,min:11};
+const T={A:90,P:86,Q:97,OEE:75};
+const CONFIGS=[
+ {k:"ACCL VRM",sbu:"ACCL",sub:"Cement Grinding (VRM)",pr:[["1NzcGrUHk7N4FSVGpAp9ZQ_H7TbpmX92YTtaJSnMx8Hg","0"]],bd:[["1NzcGrUHk7N4FSVGpAp9ZQ_H7TbpmX92YTtaJSnMx8Hg","482789258"]],g:3,col:STD,u:"MT"},
+ {k:"AIL SMS",sbu:"AIL",sub:"SMS (Steel Melting)",pr:[["186Nt9r1_7-Ij3s5PmFA3rghdy8sxhUBqHn6g5L3tlTA","1852840407"]],bd:[["186Nt9r1_7-Ij3s5PmFA3rghdy8sxhUBqHn6g5L3tlTA","482789258"]],g:3,col:STD,u:"MT"},
+ {k:"AEL Flour",sbu:"AEL",sub:"Flour Milling",pr:[["1EUn0YYjbM5CsJL5-O2tQRF5s2C_VcHvqEoo0B_B6hw0","1200791701"]],bd:[["1EUn0YYjbM5CsJL5-O2tQRF5s2C_VcHvqEoo0B_B6hw0","482789258"]],g:4,col:STD,u:"MT",crush:44},
+ {k:"APFIL Loom",sbu:"APFIL",sub:"Loom (Unit-01 & 02)",pr:[["1Q8gbAgtvxw9BaumOzPCwHpbZuzsW0tdNA_LlCpgP1jM","0"],["1H5YOsacylfSGxHFGA-D9JD7LCnWSUsx4NtU-fjccZ7w","0"]],bd:[["1Q8gbAgtvxw9BaumOzPCwHpbZuzsW0tdNA_LlCpgP1jM","1119362862"],["1H5YOsacylfSGxHFGA-D9JD7LCnWSUsx4NtU-fjccZ7w","482789258"]],g:4,col:LOOM,u:"MTR"},
+ {k:"APFIL Tapeline",sbu:"APFIL",sub:"Tape Line",pr:[["1Noxy7HFM-N98NUTjmWji3s364myGGBfQiOWToAtuRns","78827421"]],bd:[["1Noxy7HFM-N98NUTjmWji3s364myGGBfQiOWToAtuRns","482789258"]],g:3,col:STD,u:"KG"},
+ {k:"MRML Hulling",sbu:"MRML",sub:"Rice Hulling",pr:[["1ElfWAADdrvszMVLN5A3Cw4IWnvrsheT_tf1kaGfwREU","0"]],bd:[["1ElfWAADdrvszMVLN5A3Cw4IWnvrsheT_tf1kaGfwREU","482789258"]],g:3,col:STD,u:"MT",match:"Hulling"},
+ {k:"MRML Sorting",sbu:"MRML",sub:"Rice Sorting",pr:[["1ElfWAADdrvszMVLN5A3Cw4IWnvrsheT_tf1kaGfwREU","1366867245"]],bd:[["1ElfWAADdrvszMVLN5A3Cw4IWnvrsheT_tf1kaGfwREU","482789258"]],g:3,col:STD,u:"MT",match:"Sorting"},
+ {k:"Akij Feed",sbu:"AKIJ FEED",sub:"Feed Milling",pr:[["1WePbvZMRCbLrESU5ED7ENaJF1XtoET-bBL2VCAyE5bo","1852840407"]],bd:[["1WePbvZMRCbLrESU5ED7ENaJF1XtoET-bBL2VCAyE5bo","482789258"]],g:3,col:STD,u:"MT"},
+ {k:"Mustard Processing",sbu:"AEL MUSTARD",sub:"Processing",pr:[["1sRaACw7K7q4YN8KfkmdEMItgxNQpqzjmWje1TXrUBqg","0"]],bd:[["1sRaACw7K7q4YN8KfkmdEMItgxNQpqzjmWje1TXrUBqg","482789258"]],g:3,col:STD,u:"MT",match:"Processing"},
+ {k:"Mustard Packaging",sbu:"AEL MUSTARD",sub:"Packaging",pr:[["1sRaACw7K7q4YN8KfkmdEMItgxNQpqzjmWje1TXrUBqg","2038453720"]],bd:[["1sRaACw7K7q4YN8KfkmdEMItgxNQpqzjmWje1TXrUBqg","482789258"]],g:3,col:STD,u:"PCS",match:"Packaging"},
+ {k:"FAL Hulling",sbu:"FAL",sub:"Rice Hulling",pr:[["1KjDYnm1D0B8D91BhhmZ8Sm1XuRU2gT20mpdwbBdkkDs","0"]],bd:[["1KjDYnm1D0B8D91BhhmZ8Sm1XuRU2gT20mpdwbBdkkDs","482789258"]],g:3,col:STD,u:"MT",match:"Hulling",planned:true},
+ {k:"FAL Sorting",sbu:"FAL",sub:"Rice Sorting",pr:[["1KjDYnm1D0B8D91BhhmZ8Sm1XuRU2gT20mpdwbBdkkDs","1366867245"]],bd:[["1KjDYnm1D0B8D91BhhmZ8Sm1XuRU2gT20mpdwbBdkkDs","482789258"]],g:3,col:STD,u:"MT",match:"Sorting",planned:true}
+];
+function cfgOf(c){ return {groupCol:c.g,col:c.col,bdCol:BD,perfBasis:(c.crush?"crush":"out"),cardMetric:(c.crush?"crush":"out"),crushCol:c.crush,units:c.u,groupTitle:"x",targets:T,bdSectionCol:(c.match?3:null),bdSectionMatch:c.match,bdIncludePlanned:!!c.planned}; }
+function gurl(id,gid){ return "https://docs.google.com/spreadsheets/d/"+id+"/export?format=csv&gid="+gid; }
+function csvEsc(v){ v=String(v==null?"":v); return /[",\n\r]/.test(v)? '"'+v.replace(/"/g,'""')+'"' : v; }
+let _NPTCACHE=null;
+async function _loadNPT(){
+  if(_NPTCACHE) return _NPTCACHE;
+  const res=await Promise.all(CONFIGS.map(async c=>{
+    try{
+      const prs=await Promise.all(c.pr.map(s=>fetch(gurl(s[0],s[1]),{cache:"no-store"}).then(r=>r.text())));
+      const bds=await Promise.all(c.bd.map(s=>fetch(gurl(s[0],s[1]),{cache:"no-store"}).then(r=>r.text())));
+      const b=buildDashboard(prs,bds,cfgOf(c));
+      return {c:c,day:b.day,mtd:b.mtd};
+    }catch(e){ return {c:c,err:e.message}; }
+  }));
+  _NPTCACHE=res; return res;
+}
+async function downloadNPTCSV(btn){
+  const old=btn.textContent;
+  try{
+    btn.textContent="Preparing…"; btn.disabled=true;
+    const results=await _loadNPT();
+    const rows=[["SBU","Section","Period","Reporting Date","NPT (min)","Top NPT Reason","Top Reason (min)","Top NPT Category","Top Category (min)","Unavailable Order (min)","OEE %"]];
+    results.forEach(function(r){
+      if(r.err) return;
+      ["day","mtd"].forEach(function(k){
+        const p=r[k]; if(!p) return;
+        const tr=(p.losses&&p.losses[0])?p.losses[0]:{n:"",v:0};
+        const tc=(p.cats&&p.cats[0])?p.cats[0]:{n:"",v:0};
+        rows.push([r.c.sbu,r.c.sub,(k==="day"?"Last day":"MTD"),p.scopeLabel,(p.time?p.time.down:0),tr.n,tr.v,tc.n,tc.v,(p.orderMin||0),(p.empty?"":p.kpi.OEE)]);
+      });
+    });
+    const csv=rows.map(function(a){return a.map(csvEsc).join(",");}).join("\r\n");
+    const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8;"});
+    const d=new Date();
+    const stamp=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(blob);
+    a.download="SBU_NPT_"+stamp+".csv";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(a.href); },1000);
+  }catch(e){ alert("Download failed: "+e.message); }
+  finally{ btn.textContent=old; btn.disabled=false; }
+}
+</script>
 </body>
 </html>
