@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>OEE Analytics — Problem Finder</title>
+<style>
+  :root{ --teal:#0f5c56; --teal2:#0b7a6f; --ink:#12211f; --muted:#5d6b69; --line:#e2e8e7; --bg:#eef2f1; --card:#fff; --green:#2e7d32; --amber:#f9a825; --red:#c62828; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",Arial,Helvetica,sans-serif;font-size:13px}
+  .wrap{max-width:1180px;margin:0 auto;padding:14px 16px 44px}
+  header.top{background:linear-gradient(90deg,#0f5c56,#0b7a6f);color:#fff;border-radius:10px 10px 0 0;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+  header.top .brand{display:flex;gap:12px;align-items:center}
+  .logo{width:44px;height:44px;border:2px solid #bff3ea;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#bff3ea;font-size:20px}
+  header.top h1{margin:0;font-size:22px;letter-spacing:.4px;font-weight:800}
+  header.top .sub{font-size:12px;opacity:.92;margin-top:2px;letter-spacing:1px;text-transform:uppercase}
+  .back{background:#0a3f3a;color:#bff3ea;text-decoration:none;border-radius:8px;padding:9px 14px;font-weight:700;font-size:12px}
+  .bar{background:#fff;border:1px solid var(--line);border-top:0;border-radius:0 0 10px 10px;padding:10px 16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .bar button{border:1px solid var(--line);background:#fff;color:var(--teal);font-weight:700;font-size:12px;padding:8px 18px;border-radius:8px;cursor:pointer}
+  .bar button.active{background:var(--teal);color:#fff;border-color:var(--teal)}
+  .bar .status{margin-left:auto;font-size:11.5px;color:var(--muted)}
+  h2.sec{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--teal);margin:18px 0 8px;border-bottom:2px solid #cfe3df;padding-bottom:5px}
+  .grid{display:grid;gap:12px}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:820px){.g4{grid-template-columns:1fr 1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  .kpi .lab{font-size:10.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
+  .kpi .val{font-size:26px;font-weight:800;margin:3px 0}
+  .kpi .sub{font-size:11px;color:var(--muted)}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+  th{font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+  .num{text-align:right;font-variant-numeric:tabular-nums}
+  .tag{display:inline-block;font-size:10px;padding:2px 7px;border-radius:20px;font-weight:700}
+  .t-red{background:#fdecea;color:var(--red)} .t-amber{background:#fff5e0;color:#b26a00} .t-green{background:#e7f4e8;color:var(--green)}
+  .oee{font-weight:800;font-size:14px}
+  .sbu{font-size:10.5px;font-weight:800;color:var(--teal);letter-spacing:.5px}
+  a.dl{color:var(--teal);text-decoration:none;font-weight:700;font-size:11.5px;white-space:nowrap}
+  .barwrap{background:#f0f3f3;border-radius:5px;height:12px;overflow:hidden;min-width:120px}
+  .barwrap>i{display:block;height:100%;background:#c62828}
+  .ordrow{display:grid;grid-template-columns:170px 1fr 90px 130px;gap:10px;align-items:center;margin:7px 0;font-size:12px}
+  @media(max-width:820px){.ordrow{grid-template-columns:120px 1fr 70px 90px}}
+  .muted{color:var(--muted)}
+  .empty{padding:14px;color:var(--muted)}
+  footer{margin-top:18px;font-size:10.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:8px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="logo">G</div>
+      <div>
+        <div class="sub">Akij Resource — Operational Excellence</div>
+        <h1>OEE Analytics — Problem Finder</h1>
+        <div class="sub" style="text-transform:none;letter-spacing:.3px">Last day &amp; MTD · where to work · Unavailable Order / No Sales Order</div>
+      </div>
+    </div>
+    <a class="back" href="index.html">← Dashboards</a>
+  </header>
+  <div class="bar">
+    <button id="btnDay" class="active" onclick="setTab('day')">Last day</button>
+    <button id="btnMtd" onclick="setTab('mtd')">Month to date</button>
+    <span class="status" id="status">Loading 12 SBUs…</span>
+  </div>
+
+  <div class="grid g4" style="margin-top:12px">
+    <div class="card kpi"><div class="lab">Reporting day</div><div class="val" id="sumDay" style="font-size:18px">—</div><div class="sub" id="sumDaySub">last completed day</div></div>
+    <div class="card kpi"><div class="lab">SBUs reporting</div><div class="val" id="sumCount">—</div><div class="sub">with data for the period</div></div>
+    <div class="card kpi"><div class="lab">Unavailable-Order loss</div><div class="val" id="sumOrder" style="color:var(--red)">—</div><div class="sub">min · all SBUs (period)</div></div>
+    <div class="card kpi"><div class="lab">Lowest OEE</div><div class="val" id="sumWorst" style="color:var(--red)">—</div><div class="sub" id="sumWorstSub">—</div></div>
+  </div>
+
+  <h2 class="sec">Problematic issues — where to work</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>SBU / Section</th><th class="num">OEE</th><th>Top issue (min)</th><th class="num">Order loss (min)</th><th>Where to work</th><th></th></tr></thead>
+      <tbody id="tbl"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
+    </table>
+  </div>
+
+  <h2 class="sec">Focus — Unavailable Order / No Sales Order</h2>
+  <div class="card">
+    <div id="orderList"><div class="empty">Loading…</div></div>
+    <div class="muted" style="font-size:11px;margin-top:8px">Order loss = Production-Report “Unavailable Order” NPT + breakdown reasons matching order/sales. Ranked highest first.</div>
+  </div>
+
+  <footer>
+    <span>OEE Analytics — Akij Resource · cross-SBU problem finder</span>
+    <span>Data pulled live from each SBU Google Sheet on open · OEE = A × P × Q</span>
+  </footer>
+</div>
+
+<script src="engine.js"></script>
+<script>
+const STD={date:1,shift:7,out:10,ideal:11,op:17,planned:18,npt:20,run:21,good:38,target:9,nptCatStart:22};
+const LOOM={date:1,shift:8,out:11,ideal:12,op:18,planned:19,npt:21,run:22,good:39,target:10,nptCatStart:23};
+const BD={date:1,cat:8,reason:10,min:11};
+const T={A:90,P:86,Q:97,OEE:75};
+const CONFIGS=[
+ {k:"ACCL VRM", sbu:"ACCL", sub:"Cement Grinding (VRM)", url:"https://sanjeed-ferhan.github.io/accl-vrm-oee-dashboard/", pr:[["1NzcGrUHk7N4FSVGpAp9ZQ_H7TbpmX92YTtaJSnMx8Hg","0"]], bd:[["1NzcGrUHk7N4FSVGpAp9ZQ_H7TbpmX92YTtaJSnMx8Hg","482789258"]], g:3, col:STD, u:"MT"},
+ {k:"AIL SMS", sbu:"AIL", sub:"SMS (Steel Melting)", url:"https://sanjeed-ferhan.github.io/ail-sms-oee-dashboard/", pr:[["186Nt9r1_7-Ij3s5PmFA3rghdy8sxhUBqHn6g5L3tlTA","1852840407"]], bd:[["186Nt9r1_7-Ij3s5PmFA3rghdy8sxhUBqHn6g5L3tlTA","482789258"]], g:3, col:STD, u:"MT"},
+ {k:"AEL Flour", sbu:"AEL", sub:"Flour Milling", url:"https://sanjeed-ferhan.github.io/ael-flour-oee-dashboard/", pr:[["1EUn0YYjbM5CsJL5-O2tQRF5s2C_VcHvqEoo0B_B6hw0","1200791701"]], bd:[["1EUn0YYjbM5CsJL5-O2tQRF5s2C_VcHvqEoo0B_B6hw0","482789258"]], g:4, col:STD, u:"MT", crush:44},
+ {k:"APFIL Loom", sbu:"APFIL", sub:"Loom (Unit-01 & 02)", url:"https://sanjeed-ferhan.github.io/apfil-loom-oee-dashboard/", pr:[["1Q8gbAgtvxw9BaumOzPCwHpbZuzsW0tdNA_LlCpgP1jM","0"],["1H5YOsacylfSGxHFGA-D9JD7LCnWSUsx4NtU-fjccZ7w","0"]], bd:[["1Q8gbAgtvxw9BaumOzPCwHpbZuzsW0tdNA_LlCpgP1jM","1119362862"],["1H5YOsacylfSGxHFGA-D9JD7LCnWSUsx4NtU-fjccZ7w","482789258"]], g:4, col:LOOM, u:"MTR"},
+ {k:"APFIL Tapeline", sbu:"APFIL", sub:"Tape Line", url:"https://sanjeed-ferhan.github.io/apfil-tapeline-oee-dashboard/", pr:[["1Noxy7HFM-N98NUTjmWji3s364myGGBfQiOWToAtuRns","78827421"]], bd:[["1Noxy7HFM-N98NUTjmWji3s364myGGBfQiOWToAtuRns","482789258"]], g:3, col:STD, u:"KG"},
+ {k:"MRML Hulling", sbu:"MRML", sub:"Rice Hulling", url:"https://sanjeed-ferhan.github.io/mrml-hulling-oee-dashboard/", pr:[["1ElfWAADdrvszMVLN5A3Cw4IWnvrsheT_tf1kaGfwREU","0"]], bd:[["1ElfWAADdrvszMVLN5A3Cw4IWnvrsheT_tf1kaGfwREU","482789258"]], g:3, col:STD, u:"MT", match:"Hulling"},
+ {k:"MRML Sorting", sbu:"MRML", sub:"Rice Sorting", url:"https://sanjeed-ferhan.github.io/mrml-sorting-oee-dashboard/", pr:[["1ElfWAADdrvszMVLN5A3Cw4IWnvrsheT_tf1kaGfwREU","1366867245"]], bd:[["1ElfWAADdrvszMVLN5A3Cw4IWnvrsheT_tf1kaGfwREU","482789258"]], g:3, col:STD, u:"MT", match:"Sorting"},
+ {k:"Akij Feed", sbu:"AKIJ FEED", sub:"Feed Milling", url:"https://sanjeed-ferhan.github.io/akij-feed-oee-dashboard/", pr:[["1WePbvZMRCbLrESU5ED7ENaJF1XtoET-bBL2VCAyE5bo","1852840407"]], bd:[["1WePbvZMRCbLrESU5ED7ENaJF1XtoET-bBL2VCAyE5bo","482789258"]], g:3, col:STD, u:"MT"},
+ {k:"Mustard Processing", sbu:"AEL MUSTARD", sub:"Processing", url:"https://sanjeed-ferhan.github.io/ael-mustard-processing-oee-dashboard/", pr:[["1sRaACw7K7q4YN8KfkmdEMItgxNQpqzjmWje1TXrUBqg","0"]], bd:[["1sRaACw7K7q4YN8KfkmdEMItgxNQpqzjmWje1TXrUBqg","482789258"]], g:3, col:STD, u:"MT", match:"Processing"},
+ {k:"Mustard Packaging", sbu:"AEL MUSTARD", sub:"Packaging", url:"https://sanjeed-ferhan.github.io/ael-mustard-packaging-oee-dashboard/", pr:[["1sRaACw7K7q4YN8KfkmdEMItgxNQpqzjmWje1TXrUBqg","2038453720"]], bd:[["1sRaACw7K7q4YN8KfkmdEMItgxNQpqzjmWje1TXrUBqg","482789258"]], g:3, col:STD, u:"PCS", match:"Packaging"},
+ {k:"FAL Hulling", sbu:"FAL", sub:"Rice Hulling", url:"https://sanjeed-ferhan.github.io/fal-hulling-oee-dashboard/", pr:[["1KjDYnm1D0B8D91BhhmZ8Sm1XuRU2gT20mpdwbBdkkDs","0"]], bd:[["1KjDYnm1D0B8D91BhhmZ8Sm1XuRU2gT20mpdwbBdkkDs","482789258"]], g:3, col:STD, u:"MT", match:"Hulling", planned:true},
+ {k:"FAL Sorting", sbu:"FAL", sub:"Rice Sorting", url:"https://sanjeed-ferhan.github.io/fal-sorting-oee-dashboard/", pr:[["1KjDYnm1D0B8D91BhhmZ8Sm1XuRU2gT20mpdwbBdkkDs","1366867245"]], bd:[["1KjDYnm1D0B8D91BhhmZ8Sm1XuRU2gT20mpdwbBdkkDs","482789258"]], g:3, col:STD, u:"MT", match:"Sorting", planned:true}
+];
+
+function cfgOf(c){ return {groupCol:c.g, col:c.col, bdCol:BD, perfBasis:(c.crush?"crush":"out"), cardMetric:(c.crush?"crush":"out"), crushCol:c.crush, units:c.u, groupTitle:"x", targets:T, bdSectionCol:(c.match?3:null), bdSectionMatch:c.match, bdIncludePlanned:!!c.planned}; }
+function gurl(id,gid){ return "https://docs.google.com/spreadsheets/d/"+id+"/export?format=csv&gid="+gid; }
+function oeeColor(v){ if(v>=75) return "var(--green)"; if(v>=60) return "#b26a00"; return "var(--red)"; }
+function fmt(n){ return Math.round(n).toLocaleString(); }
+
+let RESULTS=[], TAB="day";
+async function loadAll(){
+  const res=[];
+  await Promise.all(CONFIGS.map(async c=>{
+    try{
+      const prs=await Promise.all(c.pr.map(s=>fetch(gurl(s[0],s[1]),{cache:"no-store"}).then(r=>r.text())));
+      const bds=await Promise.all(c.bd.map(s=>fetch(gurl(s[0],s[1]),{cache:"no-store"}).then(r=>r.text())));
+      const b=buildDashboard(prs,bds,cfgOf(c));
+      res.push({c:c, day:b.day, mtd:b.mtd});
+    }catch(e){ res.push({c:c, err:e.message}); }
+  }));
+  res.sort((a,b)=>CONFIGS.findIndex(x=>x.k===a.c.k)-CONFIGS.findIndex(x=>x.k===b.c.k));
+  RESULTS=res;
+  const ok=res.filter(r=>!r.err).length;
+  document.getElementById("status").textContent="Live · "+ok+"/"+CONFIGS.length+" SBUs loaded · "+new Date().toLocaleString();
+  const any=res.find(r=>!r.err);
+  if(any){ document.getElementById("sumDay").textContent=any.day.scopeLabel; document.getElementById("sumDaySub").textContent="basis: last completed day"; }
+  render();
+}
+function setTab(t){ TAB=t; document.getElementById("btnDay").classList.toggle("active",t==="day"); document.getElementById("btnMtd").classList.toggle("active",t==="mtd"); render(); }
+function render(){
+  const tb=document.getElementById("tbl");
+  if(!RESULTS.length){ tb.innerHTML='<tr><td colspan="6" class="empty">Loading…</td></tr>'; return; }
+  let rows="", reporting=0, orderSum=0, worst=null;
+  RESULTS.forEach(r=>{
+    if(r.err){ rows+=`<tr><td><span class="sbu">${r.c.sbu}</span> ${r.c.sub}</td><td colspan="5" class="muted">Load error: ${r.err}</td></tr>`; return; }
+    const p=r[TAB];
+    if(!p.empty) reporting++;
+    orderSum+=p.orderMin||0;
+    const top=(p.losses&&p.losses[0])?p.losses[0]:{n:"(none recorded)",v:0};
+    const team=(p.board&&p.board[0])?p.board[0].team:"—";
+    if(!p.empty && (!worst || p.kpi.OEE<worst.oee)){ worst={oee:p.kpi.OEE,name:r.c.sbu+" "+r.c.sub}; }
+    const oeeTxt=p.empty?'<span class="muted">—</span>':`<span class="oee" style="color:${oeeColor(p.kpi.OEE)}">${p.kpi.OEE.toFixed(1)}%</span>`;
+    const orderTxt=p.orderMin>0?`<span style="color:var(--red);font-weight:700">${fmt(p.orderMin)}</span>`:'<span class="muted">0</span>';
+    rows+=`<tr>
+      <td><span class="sbu">${r.c.sbu}</span> ${r.c.sub}</td>
+      <td class="num">${oeeTxt}</td>
+      <td>${top.v>0?top.n+' <span class="muted">('+fmt(top.v)+' min)</span>':'<span class="muted">—</span>'}</td>
+      <td class="num">${orderTxt}</td>
+      <td>${p.empty?'<span class="muted">No data</span>':'<span class="tag t-amber">'+team+'</span>'}</td>
+      <td><a class="dl" href="${r.c.url}" target="_blank" rel="noopener">Open →</a></td>
+    </tr>`;
+  });
+  tb.innerHTML=rows;
+  document.getElementById("sumCount").textContent=reporting+" / "+RESULTS.filter(r=>!r.err).length;
+  document.getElementById("sumOrder").textContent=fmt(orderSum);
+  if(worst){ document.getElementById("sumWorst").textContent=worst.oee.toFixed(1)+"%"; document.getElementById("sumWorstSub").textContent=worst.name; }
+  else { document.getElementById("sumWorst").textContent="—"; document.getElementById("sumWorstSub").textContent="—"; }
+
+  // order focus
+  const ord=RESULTS.filter(r=>!r.err && r[TAB].orderMin>0).map(r=>({c:r.c,v:r[TAB].orderMin, top:r[TAB].orderTop||"Unavailable Order"})).sort((a,b)=>b.v-a.v);
+  const box=document.getElementById("orderList");
+  if(!ord.length){ box.innerHTML='<div class="empty">No Unavailable-Order / No-Sales-Order loss recorded for this period.</div>'; return; }
+  const mx=ord[0].v;
+  box.innerHTML=ord.map(o=>`<div class="ordrow">
+    <span><span class="sbu">${o.c.sbu}</span> ${o.c.sub}</span>
+    <span class="barwrap"><i style="width:${Math.max(3,(o.v/mx*100)).toFixed(1)}%"></i></span>
+    <span class="num" style="color:var(--red);font-weight:700">${fmt(o.v)}</span>
+    <span class="muted" style="font-size:11px">${o.top}</span>
+  </div>`).join("");
+}
+loadAll();
+</script>
+</body>
+</html>
