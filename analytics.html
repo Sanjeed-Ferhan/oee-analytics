@@ -62,6 +62,7 @@
   <div class="bar">
     <button id="btnDay" class="active" onclick="setTab('day')">Last day</button>
     <button id="btnMtd" onclick="setTab('mtd')">Month to date</button>
+    <button onclick="downloadCSV()" style="border-color:var(--teal);color:var(--teal);font-weight:800">Download NPT CSV</button>
     <span class="status" id="status">Loading 12 SBUs…</span>
   </div>
 
@@ -178,6 +179,29 @@ function render(){
     <span class="num" style="color:var(--red);font-weight:700">${fmt(o.v)}</span>
     <span class="muted" style="font-size:11px">${o.top}</span>
   </div>`).join("");
+}
+function csvEsc(v){ v=String(v==null?"":v); return /[",\n\r]/.test(v)? '"'+v.replace(/"/g,'""')+'"' : v; }
+function downloadCSV(){
+  if(!RESULTS.length){ alert("Data still loading — please wait a moment."); return; }
+  const rows=[["SBU","Section","Period","Reporting Date","NPT (min)","Top NPT Reason","Top Reason (min)","Top NPT Category","Top Category (min)","Unavailable Order (min)","OEE %"]];
+  RESULTS.forEach(function(r){
+    if(r.err) return;
+    ["day","mtd"].forEach(function(k){
+      const p=r[k]; if(!p) return;
+      const tr=(p.losses&&p.losses[0])?p.losses[0]:{n:"",v:0};
+      const tc=(p.cats&&p.cats[0])?p.cats[0]:{n:"",v:0};
+      rows.push([r.c.sbu, r.c.sub, (k==="day"?"Last day":"MTD"), p.scopeLabel, (p.time?p.time.down:0), tr.n, tr.v, tc.n, tc.v, (p.orderMin||0), (p.empty?"":p.kpi.OEE)]);
+    });
+  });
+  const csv=rows.map(function(a){return a.map(csvEsc).join(",");}).join("\r\n");
+  const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8;"});
+  const d=new Date();
+  const stamp=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="SBU_NPT_"+stamp+".csv";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
 }
 loadAll();
 </script>
