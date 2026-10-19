@@ -101,7 +101,7 @@ function buildDashboard(prTexts, bdTexts, cfg){
     for(var j=1;j<brows.length;j++){ var b=brows[j]; if(!b||b.length<=bdCol.min) continue;
       var dd=toDate(b[bdCol.date]); if(!dd) continue;
       if(cfg.bdSectionCol!=null){ var bs=(b[cfg.bdSectionCol]||""); if(bs.indexOf(cfg.bdSectionMatch)<0) continue; }
-      bd.push({ d:dd, cat:(b[bdCol.cat]||"").trim(), reason:(b[bdCol.reason]||"").trim(), min:num(b[bdCol.min]) });
+      bd.push({ d:dd, shift:(b[bdCol.shift]||"").trim(), sec:(b[bdCol.sec]||"").trim(), cat:(b[bdCol.cat]||"").trim(), reason:(b[bdCol.reason]||"").trim(), min:num(b[bdCol.min]) });
     }
   }
   if(!recs.length) return null;
@@ -237,7 +237,7 @@ function buildDashboard(prTexts, bdTexts, cfg){
     var a=aggSet(set,cfg); var oo=a.out; if(cfg.cardMetric==="crush"){ oo=0; set.forEach(function(x){oo+=x.crush;}); }
     outs.push(r0(oo)); oees.push(r1(a.OEE*100));
   }
-  return { day:day, mtd:mtd, trend:{labels:labels,out:outs,oee:oees}, lastDay:lastDay };
+  return { day:day, mtd:mtd, trend:{labels:labels,out:outs,oee:oees}, lastDay:lastDay, bd:bd, lastLabel:fmtD(lastDay) };
 }
 
 if(typeof window!=="undefined"){ window.buildDashboard=buildDashboard; }
