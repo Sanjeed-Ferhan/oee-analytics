@@ -413,7 +413,7 @@ async function llmAnswer(q){
     return {sbu:r.c.sbu,section:r.c.sub,day:r.day,mtd:r.mtd,breakdowns:{totalEvents:bd.length,totalMin:bd.reduce((s,x)=>s+(x.min||0),0),topReasons:top}};
   }),null,0).slice(0,20000);
   if(gk){
-    const url="https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key="+encodeURIComponent(gk);
+    const url="https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key="+encodeURIComponent(gk);
     const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({systemInstruction:{parts:[{text:"You are an OEE analytics assistant. Answer questions using the provided JSON data (day=last completed day, mtd=month to date). Be concise with numbers and units."}]},contents:[{parts:[{text:"Data: "+ctx+"\n\nQuestion: "+q}]}],generationConfig:{temperature:0.2}})});
     const j=await res.json();
     if(j.error) throw new Error((j.error&&j.error.message)||JSON.stringify(j.error));
