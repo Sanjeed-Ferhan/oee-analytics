@@ -183,7 +183,7 @@
 
   <h2 class="sec">AI Assistant</h2>
   <div class="chat">
-    <div class="chathead">Ask about the data <span style="font-weight:400;text-transform:none;letter-spacing:0">· rule-based (no key) or free-form with your own OpenAI key</span>
+    <div class="chathead">Ask about the data <span style="font-weight:400;text-transform:none;letter-spacing:0">· rule-based, or free-form via Gemini</span>
       <span style="display:flex;gap:6px">
         <button class="tabbtn active" id="btnDay" onclick="setTab('day')">Last day</button>
         <button class="tabbtn" id="btnMtd" onclick="setTab('mtd')">MTD</button>
@@ -194,19 +194,10 @@
       <input id="chatInput" placeholder="Ask a question…" onkeydown="if(event.key==='Enter')askAI()"/>
       <button onclick="askAI()">Ask</button>
     </div>
-    <div class="settings">
-      <label>OpenAI key (optional):</label>
-      <input id="aiKey" type="password" placeholder="sk-..."/>
-      <button onclick="saveKey()">Save</button>
-      <button onclick="clearKey()">Clear</button>
-      <span id="keyStatus" style="font-size:11px"></span>
-    </div>
-    <div class="settings">
-      <label>Gemini key (optional):</label>
-      <input id="geminiKey" type="password" placeholder="AIza..."/>
-      <button onclick="saveGeminiKey()">Save</button>
-      <button onclick="clearGeminiKey()">Clear</button>
+    <div class="settings" style="justify-content:flex-end">
       <span id="geminiKeyStatus" style="font-size:11px"></span>
+      <button class="tabbtn" onclick="promptGeminiKey()" style="font-size:11px">Set Gemini key</button>
+      <button class="tabbtn" onclick="clearGeminiKey()" style="font-size:11px">Clear key</button>
       <span id="loadStatus" style="font-size:11px;margin-left:auto"></span>
     </div>
   </div>
@@ -435,15 +426,10 @@ async function askAI(){
   catch(e){ ph.innerHTML="Error: "+e.message; }
   document.getElementById("chatBody").scrollTop=999999;
 }
-function loadKey(){ const k=localStorage.getItem("oee_ai_key"); if(k) document.getElementById("aiKey").value=k; updateKeyStatus(); }
-function saveKey(){ const v=document.getElementById("aiKey").value.trim(); if(v) localStorage.setItem("oee_ai_key",v); updateKeyStatus(); }
-function clearKey(){ localStorage.removeItem("oee_ai_key"); document.getElementById("aiKey").value=""; updateKeyStatus(); }
-function updateKeyStatus(){ const k=localStorage.getItem("oee_ai_key"); document.getElementById("keyStatus").textContent = k? "Key set ("+k.slice(0,6)+"..."+k.slice(-4)+")" : "No key"; }
-function loadGeminiKey(){ const k=localStorage.getItem("oee_gemini_key"); if(k) document.getElementById("geminiKey").value=k; updateGeminiKeyStatus(); }
-function saveGeminiKey(){ const v=document.getElementById("geminiKey").value.trim(); if(v) localStorage.setItem("oee_gemini_key",v); updateGeminiKeyStatus(); }
-function clearGeminiKey(){ localStorage.removeItem("oee_gemini_key"); document.getElementById("geminiKey").value=""; updateGeminiKeyStatus(); }
-function updateGeminiKeyStatus(){ const k=localStorage.getItem("oee_gemini_key"); document.getElementById("geminiKeyStatus").textContent = k? "Key set ("+k.slice(0,6)+"..."+k.slice(-4)+")" : "No key"; }
-loadKey(); updateKeyStatus(); loadGeminiKey(); updateGeminiKeyStatus(); loadAll();
+function updateGeminiKeyStatus(){ const k=localStorage.getItem("oee_gemini_key"); const el=document.getElementById("geminiKeyStatus"); if(el) el.textContent = k? "Gemini key set ("+k.slice(0,6)+"..."+k.slice(-4)+")" : "No Gemini key - rule-based answers"; }
+function clearGeminiKey(){ localStorage.removeItem("oee_gemini_key"); updateGeminiKeyStatus(); }
+function promptGeminiKey(){ const v=prompt("Enter your Gemini API key (AIza...):"); if(v && v.trim()){ localStorage.setItem("oee_gemini_key",v.trim()); updateGeminiKeyStatus(); } }
+updateGeminiKeyStatus(); loadAll();
 </script>
 </body>
 </html>
