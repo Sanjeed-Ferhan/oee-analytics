@@ -157,7 +157,7 @@ async function loadAll(){
       const prs=await Promise.all(c.pr.map(s=>fetch(gurl(s[0],s[1]),{cache:"no-store"}).then(r=>r.text())));
       const bds=await Promise.all(c.bd.map(s=>fetch(gurl(s[0],s[1]),{cache:"no-store"}).then(r=>r.text())));
       const b=buildDashboard(prs,bds,cfgOf(c));
-      res.push({c:c,day:b.day,mtd:b.mtd});
+      res.push({c:c,day:b.day,mtd:b.mtd,bd:b.bd,lastDay:b.lastDay});
     }catch(e){ res.push({c:c,err:e.message}); }
   }));
   res.sort((a,b)=>CONFIGS.findIndex(x=>x.k===a.c.k)-CONFIGS.findIndex(x=>x.k===b.c.k));
@@ -224,7 +224,7 @@ async function _loadNPT(){
       const prs=await Promise.all(c.pr.map(s=>fetch(gurl(s[0],s[1]),{cache:"no-store"}).then(r=>r.text())));
       const bds=await Promise.all(c.bd.map(s=>fetch(gurl(s[0],s[1]),{cache:"no-store"}).then(r=>r.text())));
       const b=buildDashboard(prs,bds,cfgOf(c));
-      res.push({c:c,day:b.day,mtd:b.mtd});
+      res.push({c:c,day:b.day,mtd:b.mtd,bd:b.bd,lastDay:b.lastDay});
     }catch(e){ res.push({c:c,err:e.message}); }
   }));
   res.sort((a,b)=>CONFIGS.findIndex(x=>x.k===a.c.k)-CONFIGS.findIndex(x=>x.k===b.c.k));
@@ -282,18 +282,39 @@ function _fmtDate(d){ const M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","
 function addMsg(role,text){ const b=document.getElementById("chatBody"); const d=document.createElement("div"); d.className="msg "+role; d.innerHTML=text; b.appendChild(d); b.scrollTop=b.scrollHeight; }
 function localAnswer(q){
   q=q.toLowerCase();
-  const tab=TAB; const data=RESULTS.filter(r=>!r.err).map(r=>({c:r.c,p:r[tab]}));
+  const tab=TAB; const data=RESULTS.filter(r=>!r.err).map(r=>({c:r.c,p:r[tab],bd:r.bd,lastDay:r.lastDay}));
   if(!data.length) return "Data still loading - please wait.";
   if(q.includes("help")) return "Examples: <b>OEE</b>, <b>NPT</b>, <b>top losses</b>, <b>order loss</b>, <b>where to work</b>, <b>worst/best</b>, <b>shifts</b>, <b>compare</b>, <b>details for SMS</b>.";
   if(q.includes("order")||q.includes("unavailable")||q.includes("no sales")) return orderAnswer(data);
   if(q.includes("worst")||q.includes("lowest")||q.includes("best")||q.includes("highest")) return rankAnswer(data,q);
   if(q.includes("shift")) return shiftAnswer(data);
+  if(q.includes("breakdown")||q.includes("event")) return breakdownAnswer(data);
+  if(q.includes("machine")||q.includes("unit")) return machineAnswer(data);
   if(q.includes("npt")||q.includes("downtime")||q.includes("loss")) return lossAnswer(data);
   if(q.includes("oee")||q.includes("availability")||q.includes("performance")||q.includes("quality")) return oeeAnswer(data);
   if(q.includes("where")||q.includes("focus")||q.includes("work")) return focusAnswer(data);
   const hit=data.find(d=>q.includes(d.c.sbu.toLowerCase())||q.includes(d.c.sub.toLowerCase()));
   if(hit) return sbuAnswer(hit);
   return "I can answer: OEE, NPT/downtime, top losses, unavailable-order loss, where to work, shifts, compare, and per-SBU details. Try 'oee', 'top losses', 'order loss', 'worst', 'where to work', or 'help'.";
+}
+function _periodBd(d){ const bd=d.bd||[]; const ld=d.lastDay; if(!ld) return bd; const ms=new Date(ld.getFullYear(),ld.getMonth(),1); return bd.filter(x=>x.d>=ms && x.d<=ld); }
+function breakdownAnswer(data){
+  const all=[]; data.forEach(d=>{ _periodBd(d).forEach(x=> all.push({sbu:d.c.sbu,sec:x.sec,cat:x.cat,reason:x.reason,min:x.min,shift:x.shift})); });
+  if(!all.length) return "No breakdown events recorded for this period.";
+  const agg={}; all.forEach(x=>{ const k=x.sbu+"|"+x.sec+"|"+x.reason; if(!agg[k]) agg[k]={sbu:x.sbu,sec:x.sec,reason:x.reason,cat:x.cat,min:0,n:0}; agg[k].min+=x.min||0; agg[k].n++; });
+  const top=Object.values(agg).sort((a,b)=>b.min-a.min).slice(0,15);
+  let h="Top breakdown reasons ("+(TAB==="day"?"last day":"MTD")+"), "+all.length+" events:<br/><table style='width:100%;font-size:12px'><tr><th>SBU</th><th>Machine/Unit</th><th>Reason</th><th class='num'>Min</th><th class='num'>#</th></tr>";
+  top.forEach(t=>{ h+="<tr><td>"+esc(t.sbu)+"</td><td>"+esc(t.sec)+"</td><td>"+esc(t.reason)+"</td><td class='num'>"+t.min+"</td><td class='num'>"+t.n+"</td></tr>"; });
+  return h+"</table>";
+}
+function machineAnswer(data){
+  const all=[]; data.forEach(d=>{ _periodBd(d).forEach(x=> all.push({sbu:d.c.sbu,sec:x.sec,min:x.min})); });
+  if(!all.length) return "No breakdown events recorded for this period.";
+  const agg={}; all.forEach(x=>{ const k=x.sbu+"|"+x.sec; if(!agg[k]) agg[k]={sbu:x.sbu,sec:x.sec,min:0,n:0}; agg[k].min+=x.min||0; agg[k].n++; });
+  const top=Object.values(agg).sort((a,b)=>b.min-a.min).slice(0,15);
+  let h="Downtime by machine/unit ("+(TAB==="day"?"last day":"MTD")+"): <br/><table style='width:100%;font-size:12px'><tr><th>SBU</th><th>Machine/Unit</th><th class='num'>Min</th><th class='num'>#</th></tr>";
+  top.forEach(t=>{ h+="<tr><td>"+esc(t.sbu)+"</td><td>"+esc(t.sec)+"</td><td class='num'>"+t.min+"</td><td class='num'>"+t.n+"</td></tr>"; });
+  return h+"</table>";
 }
 function oeeAnswer(data){
   const sorted=data.slice().sort((a,b)=>b.p.kpi.OEE-a.p.kpi.OEE);
@@ -346,7 +367,13 @@ function sbuAnswer(d){
 async function llmAnswer(q){
   const key=localStorage.getItem("oee_ai_key");
   if(!key) return null;
-  const ctx=JSON.stringify(RESULTS.filter(r=>!r.err).map(r=>({sbu:r.c.sbu,section:r.c.sub,day:r.day,mtd:r.mtd})),null,0).slice(0,12000);
+  const ctx=JSON.stringify(RESULTS.filter(r=>!r.err).map(r=>{
+    const ld=r.lastDay; const ms=ld?new Date(ld.getFullYear(),ld.getMonth(),1):null;
+    const bd=(r.bd||[]).filter(x=>!ms || (x.d>=ms && x.d<=ld));
+    const agg={}; bd.forEach(x=>{ const k=(x.sec||"-")+" | "+(x.reason||"-"); if(!agg[k]) agg[k]={machine:x.sec,reason:x.reason,cat:x.cat,min:0,n:0}; agg[k].min+=x.min||0; agg[k].n++; });
+    const top=Object.values(agg).sort((a,b)=>b.min-a.min).slice(0,10);
+    return {sbu:r.c.sbu,section:r.c.sub,day:r.day,mtd:r.mtd,breakdowns:{totalEvents:bd.length,totalMin:bd.reduce((s,x)=>s+(x.min||0),0),topReasons:top}};
+  }),null,0).slice(0,20000);
   const res=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},body:JSON.stringify({model:"gpt-4o-mini",messages:[{role:"system",content:"You are an OEE analytics assistant. Answer questions using the provided JSON data (day=last completed day, mtd=month to date). Be concise with numbers and units. Data: "+ctx},{role:"user",content:q}],temperature:0.2})});
   const j=await res.json();
   if(j.error) throw new Error(j.error.message);
@@ -377,7 +404,7 @@ async function loadAll(){
       const prs=await Promise.all(c.pr.map(s=>fetch(gurl(s[0],s[1]),{cache:"no-store"}).then(r=>r.text())));
       const bds=await Promise.all(c.bd.map(s=>fetch(gurl(s[0],s[1]),{cache:"no-store"}).then(r=>r.text())));
       const b=buildDashboard(prs,bds,cfgOf(c));
-      res.push({c:c,day:b.day,mtd:b.mtd});
+      res.push({c:c,day:b.day,mtd:b.mtd,bd:b.bd,lastDay:b.lastDay});
     }catch(e){ res.push({c:c,err:e.message}); }
   }));
   res.sort((a,b)=>CONFIGS.findIndex(x=>x.k===a.c.k)-CONFIGS.findIndex(x=>x.k===b.c.k));
