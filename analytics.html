@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>OEE Analytics â€” Problem Finder</title>
+<title>OEE Analytics - Problem Finder</title>
 <style>
   :root{ --teal:#0f5c56; --teal2:#0b7a6f; --ink:#12211f; --muted:#5d6b69; --line:#e2e8e7; --bg:#eef2f1; --card:#fff; --green:#2e7d32; --amber:#f9a825; --red:#c62828; }
   *{box-sizing:border-box}
@@ -44,6 +44,19 @@
   .muted{color:var(--muted)}
   .empty{padding:14px;color:var(--muted)}
   footer{margin-top:18px;font-size:10.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:8px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .chat{border:1px solid var(--line);border-radius:10px;background:#fff;margin-top:14px;overflow:hidden}
+  .chathead{padding:10px 14px;font-weight:700;font-size:12px;letter-spacing:.5px;text-transform:uppercase;color:var(--teal);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+  .chatbody{max-height:360px;overflow:auto;padding:12px 14px;font-size:12.5px}
+  .msg{margin:8px 0;padding:8px 11px;border-radius:8px;max-width:94%;line-height:1.45;white-space:pre-wrap}
+  .msg.user{background:#e7f4f2;margin-left:auto;text-align:right}
+  .msg.bot{background:#f5f8f7}
+  .msg .meta{font-size:10px;color:var(--muted);margin-top:3px}
+  .chatinput{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--line)}
+  .chatinput input{flex:1;border:1px solid var(--line);border-radius:8px;padding:8px 11px;font-size:13px}
+  .chatinput button{border:0;background:var(--teal);color:#fff;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer}
+  .settings{font-size:11px;color:var(--muted);padding:0 14px 10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .settings input{border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:11px;width:260px}
+  .settings button{border:1px solid var(--line);background:#fff;color:var(--teal);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-weight:700}
 </style>
 </head>
 <body>
@@ -52,43 +65,62 @@
     <div class="brand">
       <div class="logo">G</div>
       <div>
-        <div class="sub">Akij Resource â€” Operational Excellence</div>
-        <h1>OEE Analytics â€” Problem Finder</h1>
-        <div class="sub" style="text-transform:none;letter-spacing:.3px">Last day &amp; MTD Â· where to work Â· Unavailable Order / No Sales Order</div>
+        <div class="sub">Akij Resource - Operational Excellence</div>
+        <h1>OEE Analytics - Problem Finder</h1>
+        <div class="sub" style="text-transform:none;letter-spacing:.3px">Last day &amp; MTD - where to work - Unavailable Order / No Sales Order</div>
       </div>
     </div>
-    <a class="back" href="index.html">â† Dashboards</a>
+    <a class="back" href="index.html">Dashboards</a>
   </header>
   <div class="bar">
     <button id="btnDay" class="active" onclick="setTab('day')">Last day</button>
     <button id="btnMtd" onclick="setTab('mtd')">Month to date</button>
-    <span class="status" id="status">Loading 12 SBUsâ€¦</span>
+    <span class="status" id="status">Loading 12 SBUs...</span>
   </div>
 
   <div class="grid g4" style="margin-top:12px">
-    <div class="card kpi"><div class="lab">Reporting day</div><div class="val" id="sumDay" style="font-size:18px">â€”</div><div class="sub" id="sumDaySub">last completed day</div></div>
-    <div class="card kpi"><div class="lab">SBUs reporting</div><div class="val" id="sumCount">â€”</div><div class="sub">with data for the period</div></div>
-    <div class="card kpi"><div class="lab">Unavailable-Order loss</div><div class="val" id="sumOrder" style="color:var(--red)">â€”</div><div class="sub">min Â· all SBUs (period)</div></div>
-    <div class="card kpi"><div class="lab">Lowest OEE</div><div class="val" id="sumWorst" style="color:var(--red)">â€”</div><div class="sub" id="sumWorstSub">â€”</div></div>
+    <div class="card kpi"><div class="lab">Reporting day</div><div class="val" id="sumDay" style="font-size:18px">-</div><div class="sub" id="sumDaySub">last completed day</div></div>
+    <div class="card kpi"><div class="lab">SBUs reporting</div><div class="val" id="sumCount">-</div><div class="sub">with data for the period</div></div>
+    <div class="card kpi"><div class="lab">Unavailable-Order loss</div><div class="val" id="sumOrder" style="color:var(--red)">-</div><div class="sub">min - all SBUs (period)</div></div>
+    <div class="card kpi"><div class="lab">Lowest OEE</div><div class="val" id="sumWorst" style="color:var(--red)">-</div><div class="sub" id="sumWorstSub">-</div></div>
   </div>
 
-  <h2 class="sec">Problematic issues â€” where to work</h2>
+  <h2 class="sec">Problematic issues - where to work</h2>
   <div class="card">
+    <div style="overflow:auto">
     <table>
       <thead><tr><th>SBU / Section</th><th class="num">OEE</th><th>Top issue (min)</th><th class="num">Order loss (min)</th><th>Where to work</th><th></th></tr></thead>
-      <tbody id="tbl"><tr><td colspan="6" class="empty">Loadingâ€¦</td></tr></tbody>
+      <tbody id="tbl"><tr><td colspan="6" class="empty">Loading...</td></tr></tbody>
     </table>
+    </div>
   </div>
 
-  <h2 class="sec">Focus â€” Unavailable Order / No Sales Order</h2>
+  <h2 class="sec">Focus - Unavailable Order / No Sales Order</h2>
   <div class="card">
-    <div id="orderList"><div class="empty">Loadingâ€¦</div></div>
-    <div class="muted" style="font-size:11px;margin-top:8px">Order loss = Production-Report â€œUnavailable Orderâ€ NPT + breakdown reasons matching order/sales. Ranked highest first.</div>
+    <div id="orderList"><div class="empty">Loading...</div></div>
+    <div class="muted" style="font-size:11px;margin-top:8px">Order loss = Production-Report "Unavailable Order" NPT + breakdown reasons matching order/sales. Ranked highest first.</div>
+  </div>
+
+  <h2 class="sec">AI Assistant</h2>
+  <div class="card chat">
+    <div class="chathead">Ask about the data <span style="font-weight:400;text-transform:none;letter-spacing:0">- rule-based (no key) or free-form with your own OpenAI key</span></div>
+    <div class="chatbody" id="chatBody"><div class="msg bot">Hi! Ask me things like: <b>which SBU has highest NPT?</b>, <b>top 5 downtime reasons</b>, <b>where should I work?</b>, <b>unavailable order loss</b>, <b>compare OEE</b>, <b>show shifts for flour</b>. Type <b>help</b> for more. (Default tab: Last day.)</div></div>
+    <div class="chatinput">
+      <input id="chatInput" placeholder="Ask a question..." onkeydown="if(event.key==='Enter')askAI()"/>
+      <button onclick="askAI()">Ask</button>
+    </div>
+    <div class="settings">
+      <label>OpenAI key (optional, for free-form answers):</label>
+      <input id="aiKey" type="password" placeholder="sk-..." />
+      <button onclick="saveKey()">Save</button>
+      <button onclick="clearKey()">Clear</button>
+      <span id="keyStatus" style="font-size:11px"></span>
+    </div>
   </div>
 
   <footer>
-    <span>OEE Analytics â€” Akij Resource Â· cross-SBU problem finder</span>
-    <span>Data pulled live from each SBU Google Sheet on open Â· OEE = A Ã— P Ã— Q</span>
+    <span>OEE Analytics - Akij Resource - cross-SBU problem finder</span>
+    <span>Data pulled live from each SBU Google Sheet on open - OEE = A x P x Q</span>
   </footer>
 </div>
 
@@ -96,114 +128,317 @@
 <script>
 const STD={date:1,shift:7,out:10,ideal:11,op:17,planned:18,npt:20,run:21,good:38,target:9,nptCatStart:22};
 const LOOM={date:1,shift:8,out:11,ideal:12,op:18,planned:19,npt:21,run:22,good:39,target:10,nptCatStart:23};
-const BD={date:1,cat:8,reason:10,min:11};
+const BD={date:1,shift:7,sec:3,cat:8,reason:10,min:11};
 const T={A:90,P:86,Q:97,OEE:75};
 const CONFIGS=[
- {k:"ACCL VRM", sbu:"ACCL", sub:"Cement Grinding (VRM)", url:"https://sanjeed-ferhan.github.io/accl-vrm-oee-dashboard/", pr:[["1NzcGrUHk7N4FSVGpAp9ZQ_H7TbpmX92YTtaJSnMx8Hg","0"]], bd:[["1NzcGrUHk7N4FSVGpAp9ZQ_H7TbpmX92YTtaJSnMx8Hg","482789258"]], g:3, col:STD, u:"MT"},
- {k:"AIL SMS", sbu:"AIL", sub:"SMS (Steel Melting)", url:"https://sanjeed-ferhan.github.io/ail-sms-oee-dashboard/", pr:[["186Nt9r1_7-Ij3s5PmFA3rghdy8sxhUBqHn6g5L3tlTA","1852840407"]], bd:[["186Nt9r1_7-Ij3s5PmFA3rghdy8sxhUBqHn6g5L3tlTA","482789258"]], g:3, col:STD, u:"MT"},
- {k:"AEL Flour", sbu:"AEL", sub:"Flour Milling", url:"https://sanjeed-ferhan.github.io/ael-flour-oee-dashboard/", pr:[["1EUn0YYjbM5CsJL5-O2tQRF5s2C_VcHvqEoo0B_B6hw0","1200791701"]], bd:[["1EUn0YYjbM5CsJL5-O2tQRF5s2C_VcHvqEoo0B_B6hw0","482789258"]], g:4, col:STD, u:"MT", crush:44},
- {k:"APFIL Loom", sbu:"APFIL", sub:"Loom (Unit-01 & 02)", url:"https://sanjeed-ferhan.github.io/apfil-loom-oee-dashboard/", pr:[["1Q8gbAgtvxw9BaumOzPCwHpbZuzsW0tdNA_LlCpgP1jM","0"],["1H5YOsacylfSGxHFGA-D9JD7LCnWSUsx4NtU-fjccZ7w","0"]], bd:[["1Q8gbAgtvxw9BaumOzPCwHpbZuzsW0tdNA_LlCpgP1jM","1119362862"],["1H5YOsacylfSGxHFGA-D9JD7LCnWSUsx4NtU-fjccZ7w","482789258"]], g:4, col:LOOM, u:"MTR"},
- {k:"APFIL Tapeline", sbu:"APFIL", sub:"Tape Line", url:"https://sanjeed-ferhan.github.io/apfil-tapeline-oee-dashboard/", pr:[["1Noxy7HFM-N98NUTjmWji3s364myGGBfQiOWToAtuRns","78827421"]], bd:[["1Noxy7HFM-N98NUTjmWji3s364myGGBfQiOWToAtuRns","482789258"]], g:3, col:STD, u:"KG"},
- {k:"MRML Hulling", sbu:"MRML", sub:"Rice Hulling", url:"https://sanjeed-ferhan.github.io/mrml-hulling-oee-dashboard/", pr:[["1ElfWAADdrvszMVLN5A3Cw4IWnvrsheT_tf1kaGfwREU","0"]], bd:[["1ElfWAADdrvszMVLN5A3Cw4IWnvrsheT_tf1kaGfwREU","482789258"]], g:3, col:STD, u:"MT", match:"Hulling"},
- {k:"MRML Sorting", sbu:"MRML", sub:"Rice Sorting", url:"https://sanjeed-ferhan.github.io/mrml-sorting-oee-dashboard/", pr:[["1ElfWAADdrvszMVLN5A3Cw4IWnvrsheT_tf1kaGfwREU","1366867245"]], bd:[["1ElfWAADdrvszMVLN5A3Cw4IWnvrsheT_tf1kaGfwREU","482789258"]], g:3, col:STD, u:"MT", match:"Sorting"},
- {k:"Akij Feed", sbu:"AKIJ FEED", sub:"Feed Milling", url:"https://sanjeed-ferhan.github.io/akij-feed-oee-dashboard/", pr:[["1WePbvZMRCbLrESU5ED7ENaJF1XtoET-bBL2VCAyE5bo","1852840407"]], bd:[["1WePbvZMRCbLrESU5ED7ENaJF1XtoET-bBL2VCAyE5bo","482789258"]], g:3, col:STD, u:"MT"},
- {k:"Mustard Processing", sbu:"AEL MUSTARD", sub:"Processing", url:"https://sanjeed-ferhan.github.io/ael-mustard-processing-oee-dashboard/", pr:[["1sRaACw7K7q4YN8KfkmdEMItgxNQpqzjmWje1TXrUBqg","0"]], bd:[["1sRaACw7K7q4YN8KfkmdEMItgxNQpqzjmWje1TXrUBqg","482789258"]], g:3, col:STD, u:"MT", match:"Processing"},
- {k:"Mustard Packaging", sbu:"AEL MUSTARD", sub:"Packaging", url:"https://sanjeed-ferhan.github.io/ael-mustard-packaging-oee-dashboard/", pr:[["1sRaACw7K7q4YN8KfkmdEMItgxNQpqzjmWje1TXrUBqg","2038453720"]], bd:[["1sRaACw7K7q4YN8KfkmdEMItgxNQpqzjmWje1TXrUBqg","482789258"]], g:3, col:STD, u:"PCS", match:"Packaging"},
- {k:"FAL Hulling", sbu:"FAL", sub:"Rice Hulling", url:"https://sanjeed-ferhan.github.io/fal-hulling-oee-dashboard/", pr:[["1KjDYnm1D0B8D91BhhmZ8Sm1XuRU2gT20mpdwbBdkkDs","0"]], bd:[["1KjDYnm1D0B8D91BhhmZ8Sm1XuRU2gT20mpdwbBdkkDs","482789258"]], g:3, col:STD, u:"MT", match:"Hulling", planned:true},
- {k:"FAL Sorting", sbu:"FAL", sub:"Rice Sorting", url:"https://sanjeed-ferhan.github.io/fal-sorting-oee-dashboard/", pr:[["1KjDYnm1D0B8D91BhhmZ8Sm1XuRU2gT20mpdwbBdkkDs","1366867245"]], bd:[["1KjDYnm1D0B8D91BhhmZ8Sm1XuRU2gT20mpdwbBdkkDs","482789258"]], g:3, col:STD, u:"MT", match:"Sorting", planned:true}
+ {k:"ACCL VRM",sbu:"ACCL",sub:"Cement Grinding (VRM)",url:"https://sanjeed-ferhan.github.io/accl-vrm-oee-dashboard/",pr:[["1NzcGrUHk7N4FSVGpAp9ZQ_H7TbpmX92YTtaJSnMx8Hg","0"]],bd:[["1NzcGrUHk7N4FSVGpAp9ZQ_H7TbpmX92YTtaJSnMx8Hg","482789258"]],g:3,col:STD,u:"MT"},
+ {k:"AIL SMS",sbu:"AIL",sub:"SMS (Steel Melting)",url:"https://sanjeed-ferhan.github.io/ail-sms-oee-dashboard/",pr:[["186Nt9r1_7-Ij3s5PmFA3rghdy8sxhUBqHn6g5L3tlTA","1852840407"]],bd:[["186Nt9r1_7-Ij3s5PmFA3rghdy8sxhUBqHn6g5L3tlTA","482789258"]],g:3,col:STD,u:"MT"},
+ {k:"AEL Flour",sbu:"AEL",sub:"Flour Milling",url:"https://sanjeed-ferhan.github.io/ael-flour-oee-dashboard/",pr:[["1EUn0YYjbM5CsJL5-O2tQRF5s2C_VcHvqEoo0B_B6hw0","1200791701"]],bd:[["1EUn0YYjbM5CsJL5-O2tQRF5s2C_VcHvqEoo0B_B6hw0","482789258"]],g:4,col:STD,u:"MT",crush:44},
+ {k:"APFIL Loom",sbu:"APFIL",sub:"Loom (Unit-01 & 02)",url:"https://sanjeed-ferhan.github.io/apfil-loom-oee-dashboard/",pr:[["1Q8gbAgtvxw9BaumOzPCwHpbZuzsW0tdNA_LlCpgP1jM","0"],["1H5YOsacylfSGxHFGA-D9JD7LCnWSUsx4NtU-fjccZ7w","0"]],bd:[["1Q8gbAgtvxw9BaumOzPCwHpbZuzsW0tdNA_LlCpgP1jM","1119362862"],["1H5YOsacylfSGxHFGA-D9JD7LCnWSUsx4NtU-fjccZ7w","482789258"]],g:4,col:LOOM,u:"MTR"},
+ {k:"APFIL Tapeline",sbu:"APFIL",sub:"Tape Line",url:"https://sanjeed-ferhan.github.io/apfil-tapeline-oee-dashboard/",pr:[["1Noxy7HFM-N98NUTjmWji3s364myGGBfQiOWToAtuRns","78827421"]],bd:[["1Noxy7HFM-N98NUTjmWji3s364myGGBfQiOWToAtuRns","482789258"]],g:3,col:STD,u:"KG"},
+ {k:"MRML Hulling",sbu:"MRML",sub:"Rice Hulling",url:"https://sanjeed-ferhan.github.io/mrml-hulling-oee-dashboard/",pr:[["1ElfWAADdrvszMVLN5A3Cw4IWnvrsheT_tf1kaGfwREU","0"]],bd:[["1ElfWAADdrvszMVLN5A3Cw4IWnvrsheT_tf1kaGfwREU","482789258"]],g:3,col:STD,u:"MT",match:"Hulling"},
+ {k:"MRML Sorting",sbu:"MRML",sub:"Rice Sorting",url:"https://sanjeed-ferhan.github.io/mrml-sorting-oee-dashboard/",pr:[["1ElfWAADdrvszMVLN5A3Cw4IWnvrsheT_tf1kaGfwREU","1366867245"]],bd:[["1ElfWAADdrvszMVLN5A3Cw4IWnvrsheT_tf1kaGfwREU","482789258"]],g:3,col:STD,u:"MT",match:"Sorting"},
+ {k:"Akij Feed",sbu:"AKIJ FEED",sub:"Feed Milling",url:"https://sanjeed-ferhan.github.io/akij-feed-oee-dashboard/",pr:[["1WePbvZMRCbLrESU5ED7ENaJF1XtoET-bBL2VCAyE5bo","1852840407"]],bd:[["1WePbvZMRCbLrESU5ED7ENaJF1XtoET-bBL2VCAyE5bo","482789258"]],g:3,col:STD,u:"MT"},
+ {k:"Mustard Processing",sbu:"AEL MUSTARD",sub:"Processing",url:"https://sanjeed-ferhan.github.io/ael-mustard-processing-oee-dashboard/",pr:[["1sRaACw7K7q4YN8KfkmdEMItgxNQpqzjmWje1TXrUBqg","0"]],bd:[["1sRaACw7K7q4YN8KfkmdEMItgxNQpqzjmWje1TXrUBqg","482789258"]],g:3,col:STD,u:"MT",match:"Processing"},
+ {k:"Mustard Packaging",sbu:"AEL MUSTARD",sub:"Packaging",url:"https://sanjeed-ferhan.github.io/ael-mustard-packaging-oee-dashboard/",pr:[["1sRaACw7K7q4YN8KfkmdEMItgxNQpqzjmWje1TXrUBqg","2038453720"]],bd:[["1sRaACw7K7q4YN8KfkmdEMItgxNQpqzjmWje1TXrUBqg","482789258"]],g:3,col:STD,u:"PCS",match:"Packaging"},
+ {k:"FAL Hulling",sbu:"FAL",sub:"Rice Hulling",url:"https://sanjeed-ferhan.github.io/fal-hulling-oee-dashboard/",pr:[["1KjDYnm1D0B8D91BhhmZ8Sm1XuRU2gT20mpdwbBdkkDs","0"]],bd:[["1KjDYnm1D0B8D91BhhmZ8Sm1XuRU2gT20mpdwbBdkkDs","482789258"]],g:3,col:STD,u:"MT",match:"Hulling",planned:true},
+ {k:"FAL Sorting",sbu:"FAL",sub:"Rice Sorting",url:"https://sanjeed-ferhan.github.io/fal-sorting-oee-dashboard/",pr:[["1KjDYnm1D0B8D91BhhmZ8Sm1XuRU2gT20mpdwbBdkkDs","1366867245"]],bd:[["1KjDYnm1D0B8D91BhhmZ8Sm1XuRU2gT20mpdwbBdkkDs","482789258"]],g:3,col:STD,u:"MT",match:"Sorting",planned:true}
 ];
-
-function cfgOf(c){ return {groupCol:c.g, col:c.col, bdCol:BD, perfBasis:(c.crush?"crush":"out"), cardMetric:(c.crush?"crush":"out"), crushCol:c.crush, units:c.u, groupTitle:"x", targets:T, bdSectionCol:(c.match?3:null), bdSectionMatch:c.match, bdIncludePlanned:!!c.planned}; }
+function cfgOf(c){ return {groupCol:c.g,col:c.col,bdCol:BD,perfBasis:(c.crush?"crush":"out"),cardMetric:(c.crush?"crush":"out"),crushCol:c.crush,units:c.u,groupTitle:"x",targets:T,bdSectionCol:(c.match?3:null),bdSectionMatch:c.match,bdIncludePlanned:!!c.planned}; }
 function gurl(id,gid){ return "https://docs.google.com/spreadsheets/d/"+id+"/export?format=csv&gid="+gid; }
-function oeeColor(v){ if(v>=75) return "var(--green)"; if(v>=60) return "#b26a00"; return "var(--red)"; }
-function fmt(n){ return Math.round(n).toLocaleString(); }
+function esc(v){ v=String(v==null?"":v); return /[",\n\r]/.test(v)? '"'+v.replace(/"/g,'""')+'"' : v; }
 
 let RESULTS=[], TAB="day";
 async function loadAll(){
+  const res=[]; const status=document.getElementById("status");
+  status.textContent="Loading 12 SBUs...";
+  await Promise.all(CONFIGS.map(async c=>{
+    try{
+      const prs=await Promise.all(c.pr.map(s=>fetch(gurl(s[0],s[1]),{cache:"no-store"}).then(r=>r.text())));
+      const bds=await Promise.all(c.bd.map(s=>fetch(gurl(s[0],s[1]),{cache:"no-store"}).then(r=>r.text())));
+      const b=buildDashboard(prs,bds,cfgOf(c));
+      res.push({c:c,day:b.day,mtd:b.mtd});
+    }catch(e){ res.push({c:c,err:e.message}); }
+  }));
+  res.sort((a,b)=>CONFIGS.findIndex(x=>x.k===a.c.k)-CONFIGS.findIndex(x=>x.k===b.c.k));
+  RESULTS=res;
+  const ok=res.filter(r=>!r.err).length;
+  status.textContent="Live - "+ok+"/"+CONFIGS.length+" SBUs loaded - "+new Date().toLocaleString();
+  const any=res.find(r=>!r.err);
+  if(any){ document.getElementById("sumDay").textContent=any.day.scopeLabel; document.getElementById("sumDaySub").textContent="basis: last completed day"; }
+  render();
+}
+function setTab(t){ TAB=t; document.getElementById("btnDay").classList.toggle("active",t==="day"); document.getElementById("btnMtd").classList.toggle("active",t==="mtd"); render(); }
+function rankColor(v){ if(v>=75) return "var(--green)"; if(v>=60) return "#b26a00"; return "var(--red)"; }
+function render(){
+  const tb=document.getElementById("tbl");
+  if(!RESULTS.length){ tb.innerHTML='<tr><td colspan="6" class="empty">Loading...</td></tr>'; return; }
+  let rows="", reporting=0, orderSum=0, worst=null;
+  RESULTS.forEach(function(r){
+    if(r.err){ rows+='<tr><td><span class="sbu">'+r.c.sbu+'</span> '+r.c.sub+'</td><td colspan="5" class="muted">Load error: '+r.err+'</td></tr>'; return; }
+    const p=r[TAB];
+    if(!p.empty) reporting++;
+    orderSum+=p.orderMin||0;
+    const top=(p.losses&&p.losses[0])?p.losses[0]:{n:"(none recorded)",v:0};
+    const team=(p.board&&p.board[0])?p.board[0].team:"—";
+    if(!p.empty && (!worst || p.kpi.OEE<worst.oee)){ worst={oee:p.kpi.OEE,name:r.c.sbu+" "+r.c.sub}; }
+    const oeeTxt=p.empty?'<span class="muted">—</span>':'<span class="oee" style="color:'+rankColor(p.kpi.OEE)+'">'+p.kpi.OEE.toFixed(1)+'%</span>';
+    const orderTxt=p.orderMin>0?'<span style="color:var(--red);font-weight:700">'+fmt(p.orderMin)+'</span>':'<span class="muted">0</span>';
+    rows+='<tr>'+
+      '<td><span class="sbu">'+r.c.sbu+'</span> '+r.c.sub+'</td>'+
+      '<td class="num">'+oeeTxt+'</td>'+
+      '<td>'+ (top.v>0 ? (esc(top.n)+' <span class="muted">('+fmt(top.v)+' min)</span>') : '<span class="muted">—</span>')+'</td>'+
+      '<td class="num">'+orderTxt+'</td>'+
+      '<td>'+(p.empty?'<span class="muted">No data</span>':'<span class="tag t-amber">'+team+'</span>')+'</td>'+
+      '<td><a class="dl" href="'+r.c.url+'" target="_blank" rel="noopener">Open →</a></td>'+
+    '</tr>';
+  });
+  tb.innerHTML=rows;
+  document.getElementById("sumCount").textContent=reporting+" / "+RESULTS.filter(r=>!r.err).length;
+  document.getElementById("sumOrder").textContent=fmt(orderSum);
+  if(worst){ document.getElementById("sumWorst").textContent=worst.oee.toFixed(1)+"%"; document.getElementById("sumWorstSub").textContent=worst.name; }
+  else { document.getElementById("sumWorst").textContent="—"; document.getElementById("sumWorstSub").textContent="—"; }
+
+  const ord=RESULTS.filter(r=>!r.err && r[TAB].orderMin>0).map(r=>({c:r.c,v:r[TAB].orderMin, top:r[TAB].orderTop||"Unavailable Order"})).sort((a,b)=>b.v-a.v);
+  const box=document.getElementById("orderList");
+  if(!ord.length){ box.innerHTML='<div class="empty">No Unavailable-Order / No-Sales-Order loss recorded for this period.</div>'; }
+  else{
+    const mx=ord[0].v;
+    box.innerHTML=ord.map(o=>'<div class="ordrow">'+
+      '<span><span class="sbu">'+o.c.sbu+'</span> '+o.c.sub+'</span>'+
+      '<span class="barwrap"><i style="width:'+Math.max(3,(o.v/mx*100)).toFixed(1)+'%"></i></span>'+
+      '<span class="num" style="color:var(--red);font-weight:700">'+fmt(o.v)+'</span>'+
+      '<span class="muted" style="font-size:11px">'+esc(o.top)+'</span>'+
+    '</div>').join("");
+  }
+}
+function esc(v){ v=String(v==null?"":v); return v.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function fmt(n){ return Math.round(n).toLocaleString(); }
+function csvEsc(v){ v=String(v==null?"":v); return /[",\n\r]/.test(v)? '"'+v.replace(/"/g,'""')+'"' : v; }
+let _NPTCACHE=null;
+async function _loadNPT(){
+  if(_NPTCACHE) return _NPTCACHE;
   const res=[];
   await Promise.all(CONFIGS.map(async c=>{
     try{
       const prs=await Promise.all(c.pr.map(s=>fetch(gurl(s[0],s[1]),{cache:"no-store"}).then(r=>r.text())));
       const bds=await Promise.all(c.bd.map(s=>fetch(gurl(s[0],s[1]),{cache:"no-store"}).then(r=>r.text())));
       const b=buildDashboard(prs,bds,cfgOf(c));
-      res.push({c:c, day:b.day, mtd:b.mtd});
-    }catch(e){ res.push({c:c, err:e.message}); }
+      res.push({c:c,day:b.day,mtd:b.mtd});
+    }catch(e){ res.push({c:c,err:e.message}); }
+  }));
+  res.sort((a,b)=>CONFIGS.findIndex(x=>x.k===a.c.k)-CONFIGS.findIndex(x=>x.k===b.c.k));
+  _NPTCACHE=res; return res;
+}
+async function downloadNPTCSV(btn){
+  const old=btn.textContent;
+  try{
+    btn.textContent="Preparing..."; btn.disabled=true;
+    const results=await _loadNPT();
+    const rows=[["SBU","Section","Period","Reporting Date","NPT (min)","Top NPT Reason","Top Reason (min)","Top NPT Category","Top Category (min)","Unavailable Order (min)","OEE %"]];
+    results.forEach(function(r){
+      if(r.err) return;
+      ["day","mtd"].forEach(function(k){
+        const p=r[k]; if(!p) return;
+        const tr=(p.losses&&p.losses[0])?p.losses[0]:{n:"",v:0};
+        const tc=(p.cats&&p.cats[0])?p.cats[0]:{n:"",v:0};
+        rows.push([r.c.sbu,r.c.sub,(k==="day"?"Last day":"MTD"),p.scopeLabel,(p.time?p.time.down:0),tr.n,tr.v,tc.n,tc.v,(p.orderMin||0),(p.empty?"":p.kpi.OEE)]);
+      });
+    });
+    const csv=rows.map(function(a){return a.map(csvEsc).join(",");}).join("\r\n");
+    const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8;"});
+    const d=new Date(); const stamp=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="SBU_NPT_"+stamp+".csv";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(a.href); },1000);
+  }catch(e){ alert("Download failed: "+e.message); }
+  finally{ btn.textContent=old; btn.disabled=false; }
+}
+async function downloadBreakdownCSV(btn){
+  const old=btn.textContent;
+  try{
+    btn.textContent="Preparing..."; btn.disabled=true;
+    const results=await _loadNPT();
+    const rows=[["SBU","Section","Period","Date","Shift","Machine/Unit","Category","Reason","Downtime (min)"]];
+    results.forEach(function(r){
+      if(r.err || !r.bd || !r.lastDay) return;
+      const ld=r.lastDay; const ms=new Date(ld.getFullYear(),ld.getMonth(),1);
+      r.bd.forEach(function(x){
+        if(!(x.d>=ms && x.d<=ld)) return;
+        rows.push([r.c.sbu,r.c.sub,(_sameDay(x.d,ld)?"Last day":"MTD"),_fmtDate(x.d),x.shift||"",x.sec||"",x.cat||"",x.reason||"",x.min]);
+      });
+    });
+    const csv=rows.map(function(a){return a.map(csvEsc).join(",");}).join("\r\n");
+    const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8;"});
+    const d=new Date(); const stamp=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="SBU_Breakdown_"+stamp+".csv";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(a.href); },1000);
+  }catch(e){ alert("Download failed: "+e.message); }
+  finally{ btn.textContent=old; btn.disabled=false; }
+}
+function _sameDay(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+function _fmtDate(d){ const M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]; const p=function(n){return (n<10?"0":"")+n;}; return p(d.getDate())+"-"+M[d.getMonth()]+"-"+d.getFullYear(); }
+function addMsg(role,text){ const b=document.getElementById("chatBody"); const d=document.createElement("div"); d.className="msg "+role; d.innerHTML=text; b.appendChild(d); b.scrollTop=b.scrollHeight; }
+function localAnswer(q){
+  q=q.toLowerCase();
+  const tab=TAB; const data=RESULTS.filter(r=>!r.err).map(r=>({c:r.c,p:r[tab]}));
+  if(!data.length) return "Data still loading - please wait.";
+  if(q.includes("help")) return "Examples: <b>OEE</b>, <b>NPT</b>, <b>top losses</b>, <b>order loss</b>, <b>where to work</b>, <b>worst/best</b>, <b>shifts</b>, <b>compare</b>, <b>details for SMS</b>.";
+  if(q.includes("order")||q.includes("unavailable")||q.includes("no sales")) return orderAnswer(data);
+  if(q.includes("worst")||q.includes("lowest")||q.includes("best")||q.includes("highest")) return rankAnswer(data,q);
+  if(q.includes("shift")) return shiftAnswer(data);
+  if(q.includes("npt")||q.includes("downtime")||q.includes("loss")) return lossAnswer(data);
+  if(q.includes("oee")||q.includes("availability")||q.includes("performance")||q.includes("quality")) return oeeAnswer(data);
+  if(q.includes("where")||q.includes("focus")||q.includes("work")) return focusAnswer(data);
+  const hit=data.find(d=>q.includes(d.c.sbu.toLowerCase())||q.includes(d.c.sub.toLowerCase()));
+  if(hit) return sbuAnswer(hit);
+  return "I can answer: OEE, NPT/downtime, top losses, unavailable-order loss, where to work, shifts, compare, and per-SBU details. Try 'oee', 'top losses', 'order loss', 'worst', 'where to work', or 'help'.";
+}
+function oeeAnswer(data){
+  const sorted=data.slice().sort((a,b)=>b.p.kpi.OEE-a.p.kpi.OEE);
+  let h="OEE for "+(TAB==="day"?"last day":"MTD")+":<br/><table style='width:100%;font-size:12px'><tr><th>SBU/Section</th><th class='num'>OEE</th><th class='num'>A</th><th class='num'>P</th><th class='num'>Q</th></tr>";
+  sorted.forEach(d=>{ h+="<tr><td>"+esc(d.c.sbu)+" "+esc(d.c.sub)+"</td><td class='num'>"+d.p.kpi.OEE.toFixed(1)+"%</td><td class='num'>"+d.p.kpi.A.toFixed(1)+"</td><td class='num'>"+d.p.kpi.P.toFixed(1)+"</td><td class='num'>"+d.p.kpi.Q.toFixed(1)+"</td></tr>"; });
+  return h+"</table>";
+}
+function lossAnswer(data){
+  const sorted=data.slice().sort((a,b)=>b.p.time.down-a.p.time.down);
+  let h="NPT / downtime for "+(TAB==="day"?"last day":"MTD")+":<br/><table style='width:100%;font-size:12px'><tr><th>SBU/Section</th><th class='num'>NPT (min)</th><th>Top reason</th></tr>";
+  sorted.forEach(d=>{ const t=(d.p.losses&&d.p.losses[0])?d.p.losses[0]:{n:"(none)",v:0}; h+="<tr><td>"+esc(d.c.sbu)+" "+esc(d.c.sub)+"</td><td class='num'>"+(d.p.time?d.p.time.down:0)+"</td><td>"+esc(t.n)+" ("+t.v+")</td></tr>"; });
+  return h+"</table>";
+}
+function orderAnswer(data){
+  const sorted=data.filter(d=>d.p.orderMin>0).slice().sort((a,b)=>b.p.orderMin-a.p.orderMin);
+  if(!sorted.length) return "No Unavailable-Order / No-Sales-Order loss recorded for this period.";
+  let h="Unavailable-Order / No-Sales-Order loss ("+(TAB==="day"?"last day":"MTD")+"), ranked:<br/><table style='width:100%;font-size:12px'><tr><th>SBU/Section</th><th class='num'>Order loss (min)</th><th>Top reason</th></tr>";
+  sorted.forEach(d=>{ h+="<tr><td>"+esc(d.c.sbu)+" "+esc(d.c.sub)+"</td><td class='num'>"+d.p.orderMin+"</td><td>"+esc(d.p.orderTop||"Unavailable Order")+"</td></tr>"; });
+  return h+"</table>";
+}
+function rankAnswer(data,q){
+  const asc=q.includes("worst")||q.includes("lowest");
+  const sorted=data.slice().sort((a,b)=>asc? a.p.kpi.OEE-b.p.kpi.OEE : b.p.kpi.OEE-a.p.kpi.OEE);
+  const label=asc?"Lowest":"Highest";
+  let h=label+" OEE ("+(TAB==="day"?"last day":"MTD")+"): "+sorted[0].c.sbu+" "+sorted[0].c.sub+" at "+sorted[0].p.kpi.OEE.toFixed(1)+"%.<br/><table style='width:100%;font-size:12px'><tr><th>SBU/Section</th><th class='num'>OEE</th></tr>";
+  sorted.slice(0,8).forEach(d=>{ h+="<tr><td>"+esc(d.c.sbu)+" "+esc(d.c.sub)+"</td><td class='num'>"+d.p.kpi.OEE.toFixed(1)+"%</td></tr>"; });
+  return h+"</table>";
+}
+function shiftAnswer(data){
+  let h="Shift OEE ("+(TAB==="day"?"last day":"MTD")+"): best shift highlighted.<br/>";
+  data.forEach(d=>{ const best=d.p.shifts.slice().sort((a,b)=>b.v-a.v)[0]; h+="<b>"+esc(d.c.sbu)+" "+esc(d.c.sub)+"</b>: best = "+(best?best.n+" ("+best.v.toFixed(1)+"%)":"n/a")+" | "+d.p.shifts.map(s=>s.n+":"+s.v.toFixed(1)).join(", ")+"<br/>"; });
+  return h;
+}
+function focusAnswer(data){
+  let h="Where to work ("+(TAB==="day"?"last day":"MTD")+"): top issue + responsible team per SBU.<br/><table style='width:100%;font-size:12px'><tr><th>SBU/Section</th><th>Top issue (min)</th><th>Responsible team</th></tr>";
+  data.forEach(d=>{ const t=(d.p.board&&d.p.board[0])?d.p.board[0]:{reason:"(none)",min:0,team:"—"}; h+="<tr><td>"+esc(d.c.sbu)+" "+esc(d.c.sub)+"</td><td>"+esc(t.reason)+" ("+t.min+")</td><td>"+esc(t.team)+"</td></tr>"; });
+  return h+"</table>";
+}
+function sbuAnswer(d){
+  const p=d.p;
+  const top=(p.losses&&p.losses[0])?p.losses[0]:{n:"(none)",v:0};
+  const team=(p.board&&p.board[0])?p.board[0].team:"—";
+  let h="<b>"+esc(d.c.sbu)+" — "+esc(d.c.sub)+"</b> ("+(TAB==="day"?"last day":"MTD")+")<br/>";
+  h+="OEE "+p.kpi.OEE.toFixed(1)+"% (A "+p.kpi.A.toFixed(1)+", P "+p.kpi.P.toFixed(1)+", Q "+p.kpi.Q.toFixed(1)+")<br/>";
+  h+="NPT "+p.time.down+" min · Unavailable-Order "+p.orderMin+" min · Out "+p.prod.text+"<br/>";
+  h+="Top issue: "+esc(top.n)+" ("+top.v+" min) → "+esc(team)+"<br/>";
+  h+="Shifts: "+p.shifts.map(s=>s.n+":"+s.v.toFixed(1)).join(", ");
+  return h;
+}
+async function llmAnswer(q){
+  const key=localStorage.getItem("oee_ai_key");
+  if(!key) return null;
+  const ctx=JSON.stringify(RESULTS.filter(r=>!r.err).map(r=>({sbu:r.c.sbu,section:r.c.sub,day:r.day,mtd:r.mtd})),null,0).slice(0,12000);
+  const res=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},body:JSON.stringify({model:"gpt-4o-mini",messages:[{role:"system",content:"You are an OEE analytics assistant. Answer questions using the provided JSON data (day=last completed day, mtd=month to date). Be concise with numbers and units. Data: "+ctx},{role:"user",content:q}],temperature:0.2})});
+  const j=await res.json();
+  if(j.error) throw new Error(j.error.message);
+  return j.choices[0].message.content.replace(/\n/g,"<br/>");
+}
+async function askAI(){
+  const input=document.getElementById("chatInput");
+  const q=input.value.trim(); if(!q) return;
+  addMsg("user",q); input.value="";
+  const ph=document.createElement("div"); ph.className="msg bot"; ph.innerHTML='<span class="muted">Thinking...</span>'; document.getElementById("chatBody").appendChild(ph); document.getElementById("chatBody").scrollTop=999999;
+  try{
+    const key=localStorage.getItem("oee_ai_key");
+    const ans=key? await llmAnswer(q) : localAnswer(q);
+    ph.innerHTML=ans;
+  }catch(e){ ph.innerHTML="Error: "+e.message; }
+  document.getElementById("chatBody").scrollTop=999999;
+}
+function loadKey(){ const k=localStorage.getItem("oee_ai_key"); if(k) document.getElementById("aiKey").value=k; updateKeyStatus(); }
+function saveKey(){ const v=document.getElementById("aiKey").value.trim(); if(v) localStorage.setItem("oee_ai_key",v); updateKeyStatus(); }
+function clearKey(){ localStorage.removeItem("oee_ai_key"); document.getElementById("aiKey").value=""; updateKeyStatus(); }
+function updateKeyStatus(){ const k=localStorage.getItem("oee_ai_key"); document.getElementById("keyStatus").textContent = k? "Key set ("+k.slice(0,6)+"..."+k.slice(-4)+")" : "No key - using rule-based answers"; }
+
+async function loadAll(){
+  const res=[]; const status=document.getElementById("status");
+  status.textContent="Loading 12 SBUs...";
+  await Promise.all(CONFIGS.map(async c=>{
+    try{
+      const prs=await Promise.all(c.pr.map(s=>fetch(gurl(s[0],s[1]),{cache:"no-store"}).then(r=>r.text())));
+      const bds=await Promise.all(c.bd.map(s=>fetch(gurl(s[0],s[1]),{cache:"no-store"}).then(r=>r.text())));
+      const b=buildDashboard(prs,bds,cfgOf(c));
+      res.push({c:c,day:b.day,mtd:b.mtd});
+    }catch(e){ res.push({c:c,err:e.message}); }
   }));
   res.sort((a,b)=>CONFIGS.findIndex(x=>x.k===a.c.k)-CONFIGS.findIndex(x=>x.k===b.c.k));
   RESULTS=res;
   const ok=res.filter(r=>!r.err).length;
-  document.getElementById("status").textContent="Live Â· "+ok+"/"+CONFIGS.length+" SBUs loaded Â· "+new Date().toLocaleString();
+  status.textContent="Live - "+ok+"/"+CONFIGS.length+" SBUs loaded - "+new Date().toLocaleString();
   const any=res.find(r=>!r.err);
   if(any){ document.getElementById("sumDay").textContent=any.day.scopeLabel; document.getElementById("sumDaySub").textContent="basis: last completed day"; }
   render();
+  updateKeyStatus();
+  loadKey();
 }
 function setTab(t){ TAB=t; document.getElementById("btnDay").classList.toggle("active",t==="day"); document.getElementById("btnMtd").classList.toggle("active",t==="mtd"); render(); }
+function rankColor(v){ if(v>=75) return "var(--green)"; if(v>=60) return "#b26a00"; return "var(--red)"; }
 function render(){
   const tb=document.getElementById("tbl");
-  if(!RESULTS.length){ tb.innerHTML='<tr><td colspan="6" class="empty">Loadingâ€¦</td></tr>'; return; }
+  if(!RESULTS.length){ tb.innerHTML='<tr><td colspan="6" class="empty">Loading...</td></tr>'; return; }
   let rows="", reporting=0, orderSum=0, worst=null;
-  RESULTS.forEach(r=>{
-    if(r.err){ rows+=`<tr><td><span class="sbu">${r.c.sbu}</span> ${r.c.sub}</td><td colspan="5" class="muted">Load error: ${r.err}</td></tr>`; return; }
+  RESULTS.forEach(function(r){
+    if(r.err){ rows+='<tr><td><span class="sbu">'+r.c.sbu+'</span> '+r.c.sub+'</td><td colspan="5" class="muted">Load error: '+r.err+'</td></tr>'; return; }
     const p=r[TAB];
     if(!p.empty) reporting++;
     orderSum+=p.orderMin||0;
     const top=(p.losses&&p.losses[0])?p.losses[0]:{n:"(none recorded)",v:0};
-    const team=(p.board&&p.board[0])?p.board[0].team:"â€”";
+    const team=(p.board&&p.board[0])?p.board[0].team:"—";
     if(!p.empty && (!worst || p.kpi.OEE<worst.oee)){ worst={oee:p.kpi.OEE,name:r.c.sbu+" "+r.c.sub}; }
-    const oeeTxt=p.empty?'<span class="muted">â€”</span>':`<span class="oee" style="color:${oeeColor(p.kpi.OEE)}">${p.kpi.OEE.toFixed(1)}%</span>`;
-    const orderTxt=p.orderMin>0?`<span style="color:var(--red);font-weight:700">${fmt(p.orderMin)}</span>`:'<span class="muted">0</span>';
-    rows+=`<tr>
-      <td><span class="sbu">${r.c.sbu}</span> ${r.c.sub}</td>
-      <td class="num">${oeeTxt}</td>
-      <td>${top.v>0?top.n+' <span class="muted">('+fmt(top.v)+' min)</span>':'<span class="muted">â€”</span>'}</td>
-      <td class="num">${orderTxt}</td>
-      <td>${p.empty?'<span class="muted">No data</span>':'<span class="tag t-amber">'+team+'</span>'}</td>
-      <td><a class="dl" href="${r.c.url}" target="_blank" rel="noopener">Open â†’</a></td>
-    </tr>`;
+    const oeeTxt=p.empty?'<span class="muted">—</span>':'<span class="oee" style="color:'+rankColor(p.kpi.OEE)+'">'+p.kpi.OEE.toFixed(1)+'%</span>';
+    const orderTxt=p.orderMin>0?'<span style="color:var(--red);font-weight:700">'+fmt(p.orderMin)+'</span>':'<span class="muted">0</span>';
+    rows+='<tr>'+
+      '<td><span class="sbu">'+r.c.sbu+'</span> '+r.c.sub+'</td>'+
+      '<td class="num">'+oeeTxt+'</td>'+
+      '<td>'+ (top.v>0 ? (esc(top.n)+' <span class="muted">('+fmt(top.v)+' min)</span>') : '<span class="muted">—</span>')+'</td>'+
+      '<td class="num">'+orderTxt+'</td>'+
+      '<td>'+(p.empty?'<span class="muted">No data</span>':'<span class="tag t-amber">'+team+'</span>')+'</td>'+
+      '<td><a class="dl" href="'+r.c.url+'" target="_blank" rel="noopener">Open →</a></td>'+
+    '</tr>';
   });
   tb.innerHTML=rows;
   document.getElementById("sumCount").textContent=reporting+" / "+RESULTS.filter(r=>!r.err).length;
   document.getElementById("sumOrder").textContent=fmt(orderSum);
   if(worst){ document.getElementById("sumWorst").textContent=worst.oee.toFixed(1)+"%"; document.getElementById("sumWorstSub").textContent=worst.name; }
-  else { document.getElementById("sumWorst").textContent="â€”"; document.getElementById("sumWorstSub").textContent="â€”"; }
+  else { document.getElementById("sumWorst").textContent="—"; document.getElementById("sumWorstSub").textContent="—"; }
+  const any=RESULTS.find(r=>!r.err);
+  if(any){ document.getElementById("sumDay").textContent=any[TAB].scopeLabel; document.getElementById("sumDaySub").textContent="basis: last completed day"; }
 
-  // order focus
   const ord=RESULTS.filter(r=>!r.err && r[TAB].orderMin>0).map(r=>({c:r.c,v:r[TAB].orderMin, top:r[TAB].orderTop||"Unavailable Order"})).sort((a,b)=>b.v-a.v);
   const box=document.getElementById("orderList");
-  if(!ord.length){ box.innerHTML='<div class="empty">No Unavailable-Order / No-Sales-Order loss recorded for this period.</div>'; return; }
-  const mx=ord[0].v;
-  box.innerHTML=ord.map(o=>`<div class="ordrow">
-    <span><span class="sbu">${o.c.sbu}</span> ${o.c.sub}</span>
-    <span class="barwrap"><i style="width:${Math.max(3,(o.v/mx*100)).toFixed(1)}%"></i></span>
-    <span class="num" style="color:var(--red);font-weight:700">${fmt(o.v)}</span>
-    <span class="muted" style="font-size:11px">${o.top}</span>
-  </div>`).join("");
+  if(!ord.length){ box.innerHTML='<div class="empty">No Unavailable-Order / No-Sales-Order loss recorded for this period.</div>'; }
+  else{
+    const mx=ord[0].v;
+    box.innerHTML=ord.map(o=>'<div class="ordrow">'+
+      '<span><span class="sbu">'+o.c.sbu+'</span> '+o.c.sub+'</span>'+
+      '<span class="barwrap"><i style="width:'+Math.max(3,(o.v/mx*100)).toFixed(1)+'%"></i></span>'+
+      '<span class="num" style="color:var(--red);font-weight:700">'+fmt(o.v)+'</span>'+
+      '<span class="muted" style="font-size:11px">'+esc(o.top)+'</span>'+
+    '</div>').join("");
+  }
 }
-function csvEsc(v){ v=String(v==null?"":v); return /[",\n\r]/.test(v)? '"'+v.replace(/"/g,'""')+'"' : v; }
-function downloadCSV(){
-  if(!RESULTS.length){ alert("Data still loading â€” please wait a moment."); return; }
-  const rows=[["SBU","Section","Period","Reporting Date","NPT (min)","Top NPT Reason","Top Reason (min)","Top NPT Category","Top Category (min)","Unavailable Order (min)","OEE %"]];
-  RESULTS.forEach(function(r){
-    if(r.err) return;
-    ["day","mtd"].forEach(function(k){
-      const p=r[k]; if(!p) return;
-      const tr=(p.losses&&p.losses[0])?p.losses[0]:{n:"",v:0};
-      const tc=(p.cats&&p.cats[0])?p.cats[0]:{n:"",v:0};
-      rows.push([r.c.sbu, r.c.sub, (k==="day"?"Last day":"MTD"), p.scopeLabel, (p.time?p.time.down:0), tr.n, tr.v, tc.n, tc.v, (p.orderMin||0), (p.empty?"":p.kpi.OEE)]);
-    });
-  });
-  const csv=rows.map(function(a){return a.map(csvEsc).join(",");}).join("\r\n");
-  const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8;"});
-  const d=new Date();
-  const stamp=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download="SBU_NPT_"+stamp+".csv";
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
-}
+function esc(v){ v=String(v==null?"":v); return v.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function fmt(n){ return Math.round(n).toLocaleString(); }
 loadAll();
 </script>
 </body>
 </html>
-
