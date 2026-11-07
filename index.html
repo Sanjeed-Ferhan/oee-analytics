@@ -40,6 +40,20 @@
   footer{margin-top:26px;font-size:10.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
   .plain{margin-top:10px;font-size:11.5px;color:var(--muted)}
   .plain a{color:var(--teal)}
+  .chat{border:1px solid var(--line);border-radius:12px;background:#fff;margin-top:18px;overflow:hidden}
+  .chathead{padding:12px 18px;font-weight:700;font-size:12px;letter-spacing:.5px;text-transform:uppercase;color:var(--teal);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+  .chatbody{max-height:360px;overflow:auto;padding:12px 18px;font-size:12.5px}
+  .msg{margin:8px 0;padding:8px 11px;border-radius:8px;max-width:94%;line-height:1.45;white-space:pre-wrap}
+  .msg.user{background:#e7f4f2;margin-left:auto;text-align:right}
+  .msg.bot{background:#f5f8f7}
+  .chatinput{display:flex;gap:8px;padding:10px 18px;border-top:1px solid var(--line)}
+  .chatinput input{flex:1;border:1px solid var(--line);border-radius:8px;padding:8px 11px;font-size:13px}
+  .chatinput button{border:0;background:var(--teal);color:#fff;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer}
+  .settings{font-size:11px;color:var(--muted);padding:0 18px 10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .settings input{border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:11px;width:260px}
+  .settings button{border:1px solid var(--line);background:#fff;color:var(--teal);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-weight:700}
+  .tabbtn{border:1px solid var(--line);background:#fff;color:var(--teal);font-weight:700;font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer}
+  .tabbtn.active{background:var(--teal);color:#fff;border-color:var(--teal)}
 </style>
 </head>
 <body>
@@ -167,6 +181,29 @@
 
   </div>
 
+  <h2 class="sec">AI Assistant</h2>
+  <div class="chat">
+    <div class="chathead">Ask about the data <span style="font-weight:400;text-transform:none;letter-spacing:0">· rule-based (no key) or free-form with your own OpenAI key</span>
+      <span style="display:flex;gap:6px">
+        <button class="tabbtn active" id="btnDay" onclick="setTab('day')">Last day</button>
+        <button class="tabbtn" id="btnMtd" onclick="setTab('mtd')">MTD</button>
+      </span>
+    </div>
+    <div class="chatbody" id="chatBody"><div class="msg bot">Hi! Ask me things like: <b>which SBU has highest NPT?</b>, <b>top 5 downtime reasons</b>, <b>where should I work?</b>, <b>unavailable order loss</b>, <b>compare OEE</b>. Type <b>help</b> for more.</div></div>
+    <div class="chatinput">
+      <input id="chatInput" placeholder="Ask a question…" onkeydown="if(event.key==='Enter')askAI()"/>
+      <button onclick="askAI()">Ask</button>
+    </div>
+    <div class="settings">
+      <label>OpenAI key (optional):</label>
+      <input id="aiKey" type="password" placeholder="sk-..."/>
+      <button onclick="saveKey()">Save</button>
+      <button onclick="clearKey()">Clear</button>
+      <span id="keyStatus" style="font-size:11px"></span>
+      <span id="loadStatus" style="font-size:11px;margin-left:auto"></span>
+    </div>
+  </div>
+
   <footer>
     <span>OEE Analytics — Akij Resource · single platform for all SBU OEE dashboards</span>
     <span>Each dashboard auto-updates from its Google Sheet on open · OEE = A × P × Q</span>
@@ -261,6 +298,102 @@ async function downloadBreakdownCSV(btn){
   }catch(e){ alert("Download failed: "+e.message); }
   finally{ btn.textContent=old; btn.disabled=false; }
 }
+let RESULTS=[], TAB="day";
+async function loadAll(){
+  const st=document.getElementById("loadStatus");
+  if(st) st.textContent="Loading data…";
+  try{
+    const r=await _loadNPT();
+    RESULTS=r.filter(x=>!x.err);
+    if(st) st.textContent="Live · "+RESULTS.length+"/12 SBUs · "+new Date().toLocaleTimeString();
+  }catch(e){ if(st) st.textContent="Load error: "+e.message; }
+}
+function setTab(t){ TAB=t; document.getElementById("btnDay").classList.toggle("active",t==="day"); document.getElementById("btnMtd").classList.toggle("active",t==="mtd"); }
+function esc(v){ v=String(v==null?"":v); return v.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function fmt(n){ return Math.round(n).toLocaleString(); }
+function addMsg(role,text){ const b=document.getElementById("chatBody"); const d=document.createElement("div"); d.className="msg "+role; d.innerHTML=text; b.appendChild(d); b.scrollTop=b.scrollHeight; }
+function localAnswer(q){
+  q=q.toLowerCase();
+  const data=RESULTS.map(r=>({c:r.c,p:r[TAB]}));
+  if(!data.length) return "Data still loading — please wait.";
+  if(q.includes("help")) return "Examples: <b>OEE</b>, <b>NPT</b>, <b>top losses</b>, <b>order loss</b>, <b>where to work</b>, <b>worst/best</b>, <b>shifts</b>, <b>details for SMS</b>.";
+  if(q.includes("order")||q.includes("unavailable")||q.includes("no sales")) return orderAnswer(data);
+  if(q.includes("worst")||q.includes("lowest")||q.includes("best")||q.includes("highest")) return rankAnswer(data,q);
+  if(q.includes("shift")) return shiftAnswer(data);
+  if(q.includes("npt")||q.includes("downtime")||q.includes("loss")) return lossAnswer(data);
+  if(q.includes("oee")||q.includes("availability")||q.includes("performance")||q.includes("quality")) return oeeAnswer(data);
+  if(q.includes("where")||q.includes("focus")||q.includes("work")) return focusAnswer(data);
+  const hit=data.find(d=>q.includes(d.c.sbu.toLowerCase())||q.includes(d.c.sub.toLowerCase()));
+  if(hit) return sbuAnswer(hit);
+  return "I can answer: OEE, NPT/downtime, top losses, unavailable-order loss, where to work, shifts, compare, and per-SBU details. Try 'oee', 'top losses', 'order loss', 'worst', 'where to work', or 'help'.";
+}
+function oeeAnswer(data){
+  const sorted=data.slice().sort((a,b)=>b.p.kpi.OEE-a.p.kpi.OEE);
+  let h="OEE for "+(TAB==="day"?"last day":"MTD")+":<br/><table style='width:100%;font-size:12px'><tr><th>SBU/Section</th><th class='num'>OEE</th><th class='num'>A</th><th class='num'>P</th><th class='num'>Q</th></tr>";
+  sorted.forEach(d=>{ h+="<tr><td>"+esc(d.c.sbu)+" "+esc(d.c.sub)+"</td><td class='num'>"+d.p.kpi.OEE.toFixed(1)+"%</td><td class='num'>"+d.p.kpi.A.toFixed(1)+"</td><td class='num'>"+d.p.kpi.P.toFixed(1)+"</td><td class='num'>"+d.p.kpi.Q.toFixed(1)+"</td></tr>"; });
+  return h+"</table>";
+}
+function lossAnswer(data){
+  const sorted=data.slice().sort((a,b)=>b.p.time.down-a.p.time.down);
+  let h="NPT / downtime for "+(TAB==="day"?"last day":"MTD")+":<br/><table style='width:100%;font-size:12px'><tr><th>SBU/Section</th><th class='num'>NPT (min)</th><th>Top reason</th></tr>";
+  sorted.forEach(d=>{ const t=(d.p.losses&&d.p.losses[0])?d.p.losses[0]:{n:"(none)",v:0}; h+="<tr><td>"+esc(d.c.sbu)+" "+esc(d.c.sub)+"</td><td class='num'>"+(d.p.time?d.p.time.down:0)+"</td><td>"+esc(t.n)+" ("+t.v+")</td></tr>"; });
+  return h+"</table>";
+}
+function orderAnswer(data){
+  const sorted=data.filter(d=>d.p.orderMin>0).slice().sort((a,b)=>b.p.orderMin-a.p.orderMin);
+  if(!sorted.length) return "No Unavailable-Order / No-Sales-Order loss recorded for this period.";
+  let h="Unavailable-Order / No-Sales-Order loss ("+(TAB==="day"?"last day":"MTD")+"), ranked:<br/><table style='width:100%;font-size:12px'><tr><th>SBU/Section</th><th class='num'>Order loss (min)</th><th>Top reason</th></tr>";
+  sorted.forEach(d=>{ h+="<tr><td>"+esc(d.c.sbu)+" "+esc(d.c.sub)+"</td><td class='num'>"+d.p.orderMin+"</td><td>"+esc(d.p.orderTop||"Unavailable Order")+"</td></tr>"; });
+  return h+"</table>";
+}
+function rankAnswer(data,q){
+  const asc=q.includes("worst")||q.includes("lowest");
+  const sorted=data.slice().sort((a,b)=>asc? a.p.kpi.OEE-b.p.kpi.OEE : b.p.kpi.OEE-a.p.kpi.OEE);
+  const label=asc?"Lowest":"Highest";
+  let h=label+" OEE ("+(TAB==="day"?"last day":"MTD")+"): "+sorted[0].c.sbu+" "+sorted[0].c.sub+" at "+sorted[0].p.kpi.OEE.toFixed(1)+"%.<br/><table style='width:100%;font-size:12px'><tr><th>SBU/Section</th><th class='num'>OEE</th></tr>";
+  sorted.slice(0,8).forEach(d=>{ h+="<tr><td>"+esc(d.c.sbu)+" "+esc(d.c.sub)+"</td><td class='num'>"+d.p.kpi.OEE.toFixed(1)+"%</td></tr>"; });
+  return h+"</table>";
+}
+function shiftAnswer(data){
+  let h="Shift OEE ("+(TAB==="day"?"last day":"MTD")+"): best shift highlighted.<br/>";
+  data.forEach(d=>{ const best=d.p.shifts.slice().sort((a,b)=>b.v-a.v)[0]; h+="<b>"+esc(d.c.sbu)+" "+esc(d.c.sub)+"</b>: best = "+(best?best.n+" ("+best.v.toFixed(1)+"%)":"n/a")+" | "+d.p.shifts.map(s=>s.n+":"+s.v.toFixed(1)).join(", ")+"<br/>"; });
+  return h;
+}
+function focusAnswer(data){
+  let h="Where to work ("+(TAB==="day"?"last day":"MTD")+"): top issue + responsible team per SBU.<br/><table style='width:100%;font-size:12px'><tr><th>SBU/Section</th><th>Top issue (min)</th><th>Responsible team</th></tr>";
+  data.forEach(d=>{ const t=(d.p.board&&d.p.board[0])?d.p.board[0]:{reason:"(none)",min:0,team:"—"}; h+="<tr><td>"+esc(d.c.sbu)+" "+esc(d.c.sub)+"</td><td>"+esc(t.reason)+" ("+t.min+")</td><td>"+esc(t.team)+"</td></tr>"; });
+  return h+"</table>";
+}
+function sbuAnswer(d){
+  const p=d.p; const top=(p.losses&&p.losses[0])?p.losses[0]:{n:"(none)",v:0}; const team=(p.board&&p.board[0])?p.board[0].team:"—";
+  let h="<b>"+esc(d.c.sbu)+" — "+esc(d.c.sub)+"</b> ("+(TAB==="day"?"last day":"MTD")+")<br/>";
+  h+="OEE "+p.kpi.OEE.toFixed(1)+"% (A "+p.kpi.A.toFixed(1)+", P "+p.kpi.P.toFixed(1)+", Q "+p.kpi.Q.toFixed(1)+")<br/>";
+  h+="NPT "+p.time.down+" min · Unavailable-Order "+p.orderMin+" min · Out "+p.prod.text+"<br/>";
+  h+="Top issue: "+esc(top.n)+" ("+top.v+" min) → "+esc(team)+"<br/>";
+  h+="Shifts: "+p.shifts.map(s=>s.n+":"+s.v.toFixed(1)).join(", ");
+  return h;
+}
+async function llmAnswer(q){
+  const key=localStorage.getItem("oee_ai_key"); if(!key) return null;
+  const ctx=JSON.stringify(RESULTS.map(r=>({sbu:r.c.sbu,section:r.c.sub,day:r.day,mtd:r.mtd})),null,0).slice(0,12000);
+  const res=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},body:JSON.stringify({model:"gpt-4o-mini",messages:[{role:"system",content:"You are an OEE analytics assistant. Answer questions using the provided JSON data (day=last completed day, mtd=month to date). Be concise with numbers and units. Data: "+ctx},{role:"user",content:q}],temperature:0.2})});
+  const j=await res.json();
+  if(j.error) throw new Error(j.error.message);
+  return j.choices[0].message.content.replace(/\n/g,"<br/>");
+}
+async function askAI(){
+  const input=document.getElementById("chatInput"); const q=input.value.trim(); if(!q) return;
+  addMsg("user",q); input.value="";
+  const ph=document.createElement("div"); ph.className="msg bot"; ph.innerHTML='<span class="muted">Thinking...</span>'; document.getElementById("chatBody").appendChild(ph); document.getElementById("chatBody").scrollTop=999999;
+  try{ const key=localStorage.getItem("oee_ai_key"); const ans=key? await llmAnswer(q) : localAnswer(q); ph.innerHTML=ans; }
+  catch(e){ ph.innerHTML="Error: "+e.message; }
+  document.getElementById("chatBody").scrollTop=999999;
+}
+function loadKey(){ const k=localStorage.getItem("oee_ai_key"); if(k) document.getElementById("aiKey").value=k; updateKeyStatus(); }
+function saveKey(){ const v=document.getElementById("aiKey").value.trim(); if(v) localStorage.setItem("oee_ai_key",v); updateKeyStatus(); }
+function clearKey(){ localStorage.removeItem("oee_ai_key"); document.getElementById("aiKey").value=""; updateKeyStatus(); }
+function updateKeyStatus(){ const k=localStorage.getItem("oee_ai_key"); document.getElementById("keyStatus").textContent = k? "Key set ("+k.slice(0,6)+"..."+k.slice(-4)+")" : "No key - using rule-based answers"; }
+loadKey(); updateKeyStatus(); loadAll();
 </script>
 </body>
 </html>
