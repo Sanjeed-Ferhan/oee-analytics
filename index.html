@@ -200,6 +200,13 @@
       <button onclick="saveKey()">Save</button>
       <button onclick="clearKey()">Clear</button>
       <span id="keyStatus" style="font-size:11px"></span>
+    </div>
+    <div class="settings">
+      <label>Gemini key (optional):</label>
+      <input id="geminiKey" type="password" placeholder="AIza..."/>
+      <button onclick="saveGeminiKey()">Save</button>
+      <button onclick="clearGeminiKey()">Clear</button>
+      <span id="geminiKeyStatus" style="font-size:11px"></span>
       <span id="loadStatus" style="font-size:11px;margin-left:auto"></span>
     </div>
   </div>
@@ -395,7 +402,9 @@ function sbuAnswer(d){
   return h;
 }
 async function llmAnswer(q){
-  const key=localStorage.getItem("oee_ai_key"); if(!key) return null;
+  const gk=localStorage.getItem("oee_gemini_key");
+  const ok=localStorage.getItem("oee_ai_key");
+  if(!gk && !ok) return null;
   const ctx=JSON.stringify(RESULTS.map(r=>{
     const ld=r.lastDay; const ms=ld?new Date(ld.getFullYear(),ld.getMonth(),1):null;
     const bd=(r.bd||[]).filter(x=>!ms || (x.d>=ms && x.d<=ld));
@@ -403,7 +412,17 @@ async function llmAnswer(q){
     const top=Object.values(agg).sort((a,b)=>b.min-a.min).slice(0,10);
     return {sbu:r.c.sbu,section:r.c.sub,day:r.day,mtd:r.mtd,breakdowns:{totalEvents:bd.length,totalMin:bd.reduce((s,x)=>s+(x.min||0),0),topReasons:top}};
   }),null,0).slice(0,20000);
-  const res=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},body:JSON.stringify({model:"gpt-4o-mini",messages:[{role:"system",content:"You are an OEE analytics assistant. Answer questions using the provided JSON data (day=last completed day, mtd=month to date). Be concise with numbers and units. Data: "+ctx},{role:"user",content:q}],temperature:0.2})});
+  if(gk){
+    const url="https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key="+encodeURIComponent(gk);
+    const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({systemInstruction:{parts:[{text:"You are an OEE analytics assistant. Answer questions using the provided JSON data (day=last completed day, mtd=month to date). Be concise with numbers and units."}]},contents:[{parts:[{text:"Data: "+ctx+"\n\nQuestion: "+q}]}],generationConfig:{temperature:0.2}})});
+    const j=await res.json();
+    if(j.error) throw new Error((j.error&&j.error.message)||JSON.stringify(j.error));
+    const c=j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts;
+    const txt=c? c.map(p=>p.text||"").join("") : "";
+    if(!txt) throw new Error("No response from Gemini");
+    return txt.replace(/\n/g,"<br/>");
+  }
+  const res=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+ok},body:JSON.stringify({model:"gpt-4o-mini",messages:[{role:"system",content:"You are an OEE analytics assistant. Answer questions using the provided JSON data (day=last completed day, mtd=month to date). Be concise with numbers and units. Data: "+ctx},{role:"user",content:q}],temperature:0.2})});
   const j=await res.json();
   if(j.error) throw new Error(j.error.message);
   return j.choices[0].message.content.replace(/\n/g,"<br/>");
@@ -412,15 +431,19 @@ async function askAI(){
   const input=document.getElementById("chatInput"); const q=input.value.trim(); if(!q) return;
   addMsg("user",q); input.value="";
   const ph=document.createElement("div"); ph.className="msg bot"; ph.innerHTML='<span class="muted">Thinking...</span>'; document.getElementById("chatBody").appendChild(ph); document.getElementById("chatBody").scrollTop=999999;
-  try{ const key=localStorage.getItem("oee_ai_key"); const ans=key? await llmAnswer(q) : localAnswer(q); ph.innerHTML=ans; }
+  try{ const hasLLM=localStorage.getItem("oee_ai_key")||localStorage.getItem("oee_gemini_key"); const ans=hasLLM? await llmAnswer(q) : localAnswer(q); ph.innerHTML=ans; }
   catch(e){ ph.innerHTML="Error: "+e.message; }
   document.getElementById("chatBody").scrollTop=999999;
 }
 function loadKey(){ const k=localStorage.getItem("oee_ai_key"); if(k) document.getElementById("aiKey").value=k; updateKeyStatus(); }
 function saveKey(){ const v=document.getElementById("aiKey").value.trim(); if(v) localStorage.setItem("oee_ai_key",v); updateKeyStatus(); }
 function clearKey(){ localStorage.removeItem("oee_ai_key"); document.getElementById("aiKey").value=""; updateKeyStatus(); }
-function updateKeyStatus(){ const k=localStorage.getItem("oee_ai_key"); document.getElementById("keyStatus").textContent = k? "Key set ("+k.slice(0,6)+"..."+k.slice(-4)+")" : "No key - using rule-based answers"; }
-loadKey(); updateKeyStatus(); loadAll();
+function updateKeyStatus(){ const k=localStorage.getItem("oee_ai_key"); document.getElementById("keyStatus").textContent = k? "Key set ("+k.slice(0,6)+"..."+k.slice(-4)+")" : "No key"; }
+function loadGeminiKey(){ const k=localStorage.getItem("oee_gemini_key"); if(k) document.getElementById("geminiKey").value=k; updateGeminiKeyStatus(); }
+function saveGeminiKey(){ const v=document.getElementById("geminiKey").value.trim(); if(v) localStorage.setItem("oee_gemini_key",v); updateGeminiKeyStatus(); }
+function clearGeminiKey(){ localStorage.removeItem("oee_gemini_key"); document.getElementById("geminiKey").value=""; updateGeminiKeyStatus(); }
+function updateGeminiKeyStatus(){ const k=localStorage.getItem("oee_gemini_key"); document.getElementById("geminiKeyStatus").textContent = k? "Key set ("+k.slice(0,6)+"..."+k.slice(-4)+")" : "No key"; }
+loadKey(); updateKeyStatus(); loadGeminiKey(); updateGeminiKeyStatus(); loadAll();
 </script>
 </body>
 </html>
