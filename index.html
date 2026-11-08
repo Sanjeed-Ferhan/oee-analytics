@@ -183,7 +183,7 @@
 
   <h2 class="sec">AI Assistant</h2>
   <div class="chat">
-    <div class="chathead">Ask about the data <span style="font-weight:400;text-transform:none;letter-spacing:0">· answered by Grok (xAI)</span>
+    <div class="chathead">Ask about the data <span style="font-weight:400;text-transform:none;letter-spacing:0">· answered by Groq (Qwen 3.8)</span>
       <span style="display:flex;gap:6px">
         <button class="tabbtn active" id="btnDay" onclick="setTab('day')">Last day</button>
         <button class="tabbtn" id="btnMtd" onclick="setTab('mtd')">MTD</button>
@@ -195,7 +195,7 @@
       <button onclick="askAI()">Ask</button>
     </div>
     <div class="settings" style="justify-content:flex-end">
-      <span style="font-size:11px">Powered by Grok (xAI)</span>
+      <span style="font-size:11px">Powered by Groq (Qwen 3.8)</span>
       <span id="loadStatus" style="font-size:11px;margin-left:auto"></span>
     </div>
   </div>
@@ -390,19 +390,19 @@ function sbuAnswer(d){
   h+="Shifts: "+p.shifts.map(s=>s.n+":"+s.v.toFixed(1)).join(", ");
   return h;
 }
-const GROK_API_KEY="sk-aNn2AOUPB90yCmljocSF3GVtCNe8zJ7VuGQGFvkNP7WMamSq";
+const GROQ_API_KEY="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";
 async function llmAnswer(q){
   const ctx=JSON.stringify(RESULTS.map(r=>{
     const ld=r.lastDay; const ms=ld?new Date(ld.getFullYear(),ld.getMonth(),1):null;
     const bd=(r.bd||[]).filter(x=>!ms || (x.d>=ms && x.d<=ld));
     const agg={}; bd.forEach(x=>{ const k=(x.sec||"-")+" | "+(x.reason||"-"); if(!agg[k]) agg[k]={machine:x.sec,reason:x.reason,cat:x.cat,min:0,n:0}; agg[k].min+=x.min||0; agg[k].n++; });
-    const top=Object.values(agg).sort((a,b)=>b.min-a.min).slice(0,10);
+    const top=Object.values(agg).sort((a,b)=>b.min-a.min).slice(0,5);
     return {sbu:r.c.sbu,section:r.c.sub,day:r.day,mtd:r.mtd,breakdowns:{totalEvents:bd.length,totalMin:bd.reduce((s,x)=>s+(x.min||0),0),topReasons:top}};
-  }),null,0).slice(0,20000);
-  const res=await fetch("https://api.x.ai/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+GROK_API_KEY},body:JSON.stringify({model:"grok-4",messages:[{role:"system",content:"You are an OEE analytics assistant. Answer questions using the provided JSON data (day=last completed day, mtd=month to date). Be concise with numbers and units. Data: "+ctx},{role:"user",content:q}],temperature:0.2})});
+  }),null,0).slice(0,14000);
+  const res=await fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+GROQ_API_KEY},body:JSON.stringify({model:"qwen/qwen3.8-27b",messages:[{role:"system",content:"You are an OEE analytics assistant. Answer questions using the provided JSON data (day=last completed day, mtd=month to date). Be concise with numbers and units. Data: "+ctx},{role:"user",content:q}],temperature:0.2})});
   const j=await res.json();
   if(j.error) throw new Error(j.error.message||JSON.stringify(j.error));
-  if(!j.choices||!j.choices[0]) throw new Error("No response from Grok");
+  if(!j.choices||!j.choices[0]) throw new Error("No response from Groq");
   return j.choices[0].message.content.replace(/\n/g,"<br/>");
 }
 async function askAI(){
