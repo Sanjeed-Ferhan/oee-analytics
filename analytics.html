@@ -103,16 +103,14 @@
 
   <h2 class="sec">AI Assistant</h2>
   <div class="card chat">
-    <div class="chathead">Ask about the data <span style="font-weight:400;text-transform:none;letter-spacing:0">- rule-based, or free-form via Gemini</span></div>
+    <div class="chathead">Ask about the data <span style="font-weight:400;text-transform:none;letter-spacing:0">- answered by Grok (xAI)</span></div>
     <div class="chatbody" id="chatBody"><div class="msg bot">Hi! Ask me things like: <b>which SBU has highest NPT?</b>, <b>top 5 downtime reasons</b>, <b>where should I work?</b>, <b>unavailable order loss</b>, <b>compare OEE</b>, <b>show shifts for flour</b>. Type <b>help</b> for more. (Default tab: Last day.)</div></div>
     <div class="chatinput">
       <input id="chatInput" placeholder="Ask a question..." onkeydown="if(event.key==='Enter')askAI()"/>
       <button onclick="askAI()">Ask</button>
     </div>
     <div class="settings" style="justify-content:flex-end">
-      <span id="geminiKeyStatus" style="font-size:11px"></span>
-      <button class="tabbtn" onclick="promptGeminiKey()" style="font-size:11px">Set Gemini key</button>
-      <button class="tabbtn" onclick="clearGeminiKey()" style="font-size:11px">Clear key</button>
+      <span style="font-size:11px">Powered by Grok (xAI)</span>
     </div>
   </div>
 
@@ -362,10 +360,8 @@ function sbuAnswer(d){
   h+="Shifts: "+p.shifts.map(s=>s.n+":"+s.v.toFixed(1)).join(", ");
   return h;
 }
+const GROK_API_KEY="sk-aNn2AOUPB90yCmljocSF3GVtCNe8zJ7VuGQGFvkNP7WMamSq";
 async function llmAnswer(q){
-  const gk=localStorage.getItem("oee_gemini_key");
-  const ok=localStorage.getItem("oee_ai_key");
-  if(!gk && !ok) return null;
   const ctx=JSON.stringify(RESULTS.filter(r=>!r.err).map(r=>{
     const ld=r.lastDay; const ms=ld?new Date(ld.getFullYear(),ld.getMonth(),1):null;
     const bd=(r.bd||[]).filter(x=>!ms || (x.d>=ms && x.d<=ld));
@@ -373,19 +369,10 @@ async function llmAnswer(q){
     const top=Object.values(agg).sort((a,b)=>b.min-a.min).slice(0,10);
     return {sbu:r.c.sbu,section:r.c.sub,day:r.day,mtd:r.mtd,breakdowns:{totalEvents:bd.length,totalMin:bd.reduce((s,x)=>s+(x.min||0),0),topReasons:top}};
   }),null,0).slice(0,20000);
-  if(gk){
-    const url="https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key="+encodeURIComponent(gk);
-    const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({systemInstruction:{parts:[{text:"You are an OEE analytics assistant. Answer questions using the provided JSON data (day=last completed day, mtd=month to date). Be concise with numbers and units."}]},contents:[{parts:[{text:"Data: "+ctx+"\n\nQuestion: "+q}]}],generationConfig:{temperature:0.2}})});
-    const j=await res.json();
-    if(j.error) throw new Error((j.error&&j.error.message)||JSON.stringify(j.error));
-    const c=j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts;
-    const txt=c? c.map(p=>p.text||"").join("") : "";
-    if(!txt) throw new Error("No response from Gemini");
-    return txt.replace(/\n/g,"<br/>");
-  }
-  const res=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+ok},body:JSON.stringify({model:"gpt-4o-mini",messages:[{role:"system",content:"You are an OEE analytics assistant. Answer questions using the provided JSON data (day=last completed day, mtd=month to date). Be concise with numbers and units. Data: "+ctx},{role:"user",content:q}],temperature:0.2})});
+  const res=await fetch("https://api.x.ai/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+GROK_API_KEY},body:JSON.stringify({model:"grok-4",messages:[{role:"system",content:"You are an OEE analytics assistant. Answer questions using the provided JSON data (day=last completed day, mtd=month to date). Be concise with numbers and units. Data: "+ctx},{role:"user",content:q}],temperature:0.2})});
   const j=await res.json();
-  if(j.error) throw new Error(j.error.message);
+  if(j.error) throw new Error(j.error.message||JSON.stringify(j.error));
+  if(!j.choices||!j.choices[0]) throw new Error("No response from Grok");
   return j.choices[0].message.content.replace(/\n/g,"<br/>");
 }
 async function askAI(){
@@ -393,16 +380,10 @@ async function askAI(){
   const q=input.value.trim(); if(!q) return;
   addMsg("user",q); input.value="";
   const ph=document.createElement("div"); ph.className="msg bot"; ph.innerHTML='<span class="muted">Thinking...</span>'; document.getElementById("chatBody").appendChild(ph); document.getElementById("chatBody").scrollTop=999999;
-  try{
-    const hasLLM=localStorage.getItem("oee_ai_key")||localStorage.getItem("oee_gemini_key");
-    const ans=hasLLM? await llmAnswer(q) : localAnswer(q);
-    ph.innerHTML=ans;
-  }catch(e){ ph.innerHTML="Error: "+e.message; }
+  try{ const ans=await llmAnswer(q); ph.innerHTML=ans; }
+  catch(e){ ph.innerHTML=localAnswer(q); }
   document.getElementById("chatBody").scrollTop=999999;
 }
-function updateGeminiKeyStatus(){ const k=localStorage.getItem("oee_gemini_key"); const el=document.getElementById("geminiKeyStatus"); if(el) el.textContent = k? "Gemini key set ("+k.slice(0,6)+"..."+k.slice(-4)+")" : "No Gemini key - rule-based answers"; }
-function clearGeminiKey(){ localStorage.removeItem("oee_gemini_key"); updateGeminiKeyStatus(); }
-function promptGeminiKey(){ const v=prompt("Enter your Gemini API key (AIza...):"); if(v && v.trim()){ localStorage.setItem("oee_gemini_key",v.trim()); updateGeminiKeyStatus(); } }
 
 async function loadAll(){
   const res=[]; const status=document.getElementById("status");
