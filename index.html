@@ -313,12 +313,14 @@ function localAnswer(q){
   q=q.toLowerCase();
   const data=RESULTS.map(r=>({c:r.c,p:r[TAB],bd:r.bd,lastDay:r.lastDay}));
   if(!data.length) return "Data still loading — please wait.";
-  if(q.includes("help")) return "Examples: <b>OEE</b>, <b>NPT</b>, <b>top losses</b>, <b>order loss</b>, <b>where to work</b>, <b>worst/best</b>, <b>shifts</b>, <b>breakdowns</b>, <b>machines</b>, <b>details for SMS</b>.";
+  if(q.includes("help")) return "Examples: <b>OEE</b>, <b>NPT</b>, <b>top losses</b>, <b>order loss</b>, <b>where to work</b>, <b>worst/best</b>, <b>shifts</b>, <b>breakdowns</b>, <b>machines</b>, <b>output</b>, <b>run time</b>, <b>details for SMS</b>.";
   if(q.includes("order")||q.includes("unavailable")||q.includes("no sales")) return orderAnswer(data);
   if(q.includes("worst")||q.includes("lowest")||q.includes("best")||q.includes("highest")) return rankAnswer(data,q);
   if(q.includes("shift")) return shiftAnswer(data);
   if(q.includes("breakdown")||q.includes("event")) return breakdownAnswer(data);
   if(q.includes("machine")||q.includes("unit")) return machineAnswer(data);
+  if(q.includes("output")||q.includes("production")) return outputAnswer(data);
+  if(q.includes("run time")||q.includes("runtime")||q.includes("run min")) return runtimeAnswer(data);
   if(q.includes("npt")||q.includes("downtime")||q.includes("loss")) return lossAnswer(data);
   if(q.includes("oee")||q.includes("availability")||q.includes("performance")||q.includes("quality")) return oeeAnswer(data);
   if(q.includes("where")||q.includes("focus")||q.includes("work")) return focusAnswer(data);
@@ -333,6 +335,16 @@ function breakdownAnswer(data){
   const top=Object.values(agg).sort((a,b)=>b.min-a.min).slice(0,15);
   let h="Top breakdown reasons ("+(TAB==="day"?"last day":"MTD")+"), "+all.length+" events:<br/><table style='width:100%;font-size:12px'><tr><th>SBU</th><th>Machine/Unit</th><th>Reason</th><th class='num'>Min</th><th class='num'>#</th></tr>";
   top.forEach(t=>{ h+="<tr><td>"+esc(t.sbu)+"</td><td>"+esc(t.sec)+"</td><td>"+esc(t.reason)+"</td><td class='num'>"+t.min+"</td><td class='num'>"+t.n+"</td></tr>"; });
+  return h+"</table>";
+}
+function outputAnswer(data){
+  let h="Output/production for "+(TAB==="day"?"last day":"MTD")+":<br/><table style='width:100%;font-size:12px'><tr><th>SBU/Section</th><th>Output</th></tr>";
+  data.forEach(d=>{ h+="<tr><td>"+esc(d.c.sbu)+" "+esc(d.c.sub)+"</td><td>"+esc(d.p.prod?d.p.prod.text:"—")+"</td></tr>"; });
+  return h+"</table>";
+}
+function runtimeAnswer(data){
+  let h="Run time (min) for "+(TAB==="day"?"last day":"MTD")+":<br/><table style='width:100%;font-size:12px'><tr><th>SBU/Section</th><th class='num'>Run (min)</th><th class='num'>NPT (min)</th></tr>";
+  data.forEach(d=>{ h+="<tr><td>"+esc(d.c.sbu)+" "+esc(d.c.sub)+"</td><td class='num'>"+(d.p.time?d.p.time.run:0)+"</td><td class='num'>"+(d.p.time?d.p.time.down:0)+"</td></tr>"; });
   return h+"</table>";
 }
 function machineAnswer(data){
@@ -395,9 +407,8 @@ async function llmAnswer(q){
   const ctx=JSON.stringify(RESULTS.map(r=>{
     const ld=r.lastDay; const ms=ld?new Date(ld.getFullYear(),ld.getMonth(),1):null;
     const bd=(r.bd||[]).filter(x=>!ms || (x.d>=ms && x.d<=ld));
-    const agg={}; bd.forEach(x=>{ const k=(x.sec||"-")+" | "+(x.reason||"-"); if(!agg[k]) agg[k]={machine:x.sec,reason:x.reason,cat:x.cat,min:0,n:0}; agg[k].min+=x.min||0; agg[k].n++; });
-    const top=Object.values(agg).sort((a,b)=>b.min-a.min).slice(0,5);
-    return {sbu:r.c.sbu,section:r.c.sub,day:r.day,mtd:r.mtd,breakdowns:{totalEvents:bd.length,totalMin:bd.reduce((s,x)=>s+(x.min||0),0),topReasons:top}};
+    const compact=function(p){ if(!p||p.empty) return null; return {scope:p.scopeLabel,kpi:p.kpi,nptMin:p.time?p.time.down:0,runMin:p.time?p.time.run:0,topLoss:(p.losses||[]).slice(0,5),topCat:(p.cats||[]).slice(0,5),shifts:p.shifts,orderMin:p.orderMin||0,orderTop:p.orderTop,out:p.prod?p.prod.text:null}; };
+    return {sbu:r.c.sbu,section:r.c.sub,day:compact(r.day),mtd:compact(r.mtd),breakdowns:{totalEvents:bd.length,totalMin:bd.reduce((s,x)=>s+(x.min||0),0),events:bd.slice(0,60).map(function(x){return {d:x.d.toISOString().slice(0,10),sh:x.shift,m:x.sec,cat:x.cat,reason:x.reason,min:x.min};})}};
   }),null,0).slice(0,14000);
   const res=await fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+GROQ_API_KEY},body:JSON.stringify({model:"qwen/qwen3.8-27b",messages:[{role:"system",content:"You are an OEE analytics assistant. Answer questions using the provided JSON data (day=last completed day, mtd=month to date). Be concise with numbers and units. Data: "+ctx},{role:"user",content:q}],temperature:0.2})});
   const j=await res.json();
